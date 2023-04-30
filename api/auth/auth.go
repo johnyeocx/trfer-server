@@ -85,15 +85,17 @@ func verifyEmailRegisterOtp (sqlDB *sql.DB, email string, otp string) (map[strin
 }
 
 func refreshToken(sqlDB *sql.DB, refreshToken string, tokenType enums.TokenType) (map[string]string, *models.RequestError) {
-	uId, tokenType, err := secure.ParseRefreshToken(refreshToken)
+
+	uId, tType, err := secure.ParseRefreshToken(refreshToken)
 
 	if err != nil {
 		return nil, auth_errors.ParseRefreshTokenFailedErr(err)
 	}
 
-	if tokenType != TokenType.User {
+	if tType != string(tokenType) {
 		return nil, auth_errors.InvalidTokenTypeErr(err)
 	}
+	
 	
 	userIdInt, _ := strconv.Atoi(uId)
 	

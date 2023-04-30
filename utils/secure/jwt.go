@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	accessTokenExpiry = time.Minute * 200
+	accessTokenExpiry = time.Second * 5
 	refreshTokenExpiry = time.Minute * 200
 )
 
@@ -81,7 +81,7 @@ func ParseAccessToken(tokenStr string) (string, string, error) {
 	}
 }
 
-func ParseRefreshToken(tokenStr string) (string, enums.TokenType, error) {
+func ParseRefreshToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, isvalid := token.Method.(*jwt.SigningMethodHMAC); !isvalid {
 			return nil, fmt.Errorf("invalid token: %v", token.Header["alg"])
@@ -92,7 +92,7 @@ func ParseRefreshToken(tokenStr string) (string, enums.TokenType, error) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userID := claims["user_id"].(string)
-		tokenType := claims["type"].(enums.TokenType)
+		tokenType := claims["type"].(string)
 		return userID, tokenType, nil
 	} else {
 		log.Print("Err", err)
