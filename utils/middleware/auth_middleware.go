@@ -29,7 +29,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		var accessToken string
 		accessToken, err := c.Cookie("access_token")
-
 		if err != nil || len(accessToken) == 0 {
 			const BEARER_SCHEMA = "Bearer "
 			authHeader := c.GetHeader("Authorization")
@@ -83,7 +82,7 @@ func AuthenticateUser(c *gin.Context, sqlDB *sql.DB) (int, error) {
 	userId, tokenType, err := UserCtx(c)
 
 	if err != nil {
-		log.Println("Failed to get cus id from context")
+		log.Println("Failed to get user id from context")
 		c.JSON(http.StatusUnauthorized, err)
 		return -1, err
 	}

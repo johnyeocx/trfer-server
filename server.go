@@ -31,7 +31,8 @@ func main() {
 		// AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
 		AllowOrigins:     []string{
 			"http://localhost:3000", 
-			// "*",
+			"https://trfer.me", 
+			"https://goldfish-app-q2lpn.ondigitalocean.app",
 		},
 		// AllowOrigins:     []string{"http://172.28.38.241:3000", "http://172.28.38.241:3001"},
 		AllowMethods:     []string{"PUT", "PATCH", "GET", "DELETE", "POST",},
