@@ -25,21 +25,33 @@ func Routes(authRouter *gin.RouterGroup, sqlDB *sql.DB) {
 func loginHandler(sqlDB *sql.DB) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		// 1. Get user email and search if exists in db
-		reqBody := struct {
-			Email  		 string `json:"email"`
-		}{}
+		// reqBody := struct {
+		// 	Email  		 string `json:"email"`
+		// }{}
 		
-		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
-			return
+		// if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
+		// 	return
+		// }
+
+		// reqErr := login(sqlDB, reqBody.Email)
+		// if reqErr != nil {
+		// 	reqErr.Log()
+		// 	c.JSON(reqErr.StatusCode, reqErr.Code)
+		// 	return
+		// }
+
+		cookie := &http.Cookie{
+			Name:     "my_cookie",
+			Value:    "some_value",
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: false,
+			Secure:   false, // Set this to true if your site is served over HTTPS
+			MaxAge:   3600, // Set the cookie expiry time in seconds
 		}
 
-		reqErr := login(sqlDB, reqBody.Email)
-		if reqErr != nil {
-			reqErr.Log()
-			c.JSON(reqErr.StatusCode, reqErr.Code)
-			return
-		}
-		
+		http.SetCookie(c.Writer, cookie)
+
+		// c.SetCookie("access_token", "abc", 60 * 60 * 24, "/", "localhost", false, false);
 		c.JSON(http.StatusOK, nil)
 	}
 }
@@ -64,8 +76,9 @@ func verifyEmailLoginOtpHandler(sqlDB *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		c.SetCookie("access_token", res["access_token"], 60 * 60 * 24, "/", "localhost", false, true);
-		c.SetCookie("refresh_token", res["refresh_token"], 60 * 60 * 24, "/", "localhost", false, true);
+
+		c.SetCookie("access_token", res["access_token"], 60 * 60 * 24, "/", "http://localhost", false, false);
+		c.SetCookie("refresh_token", res["refresh_token"], 60 * 60 * 24, "/", "http://localhost", false, false);
 
 		c.JSON(http.StatusOK, res)
 	}
