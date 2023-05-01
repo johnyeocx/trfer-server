@@ -2,6 +2,7 @@ package transfer
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -19,8 +20,8 @@ func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 	return func (c *gin.Context) {
 		// 1. Get user email and search if exists in db
 		reqBody := struct {
-			ToUsername  string `json:"to_username"`
-			Amount		int		`json:"amount"`
+			ToUsername  string 		`json:"to_username"`
+			Amount		float64		`json:"amount"`
 			Note		string		`json:"note"`
 		}{}
 		
@@ -28,13 +29,16 @@ func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 			return
 		}
 
+		if (reqBody.Amount > 5.00) {
+			fmt.Println("Amt too hight")
+			c.JSON(http.StatusBadRequest, errors.New("amount too high"))
+		}
+
 		linkToken, reqErr := TransferOpenAmt(sqlDB, plaidCli, reqBody.ToUsername, reqBody.Amount)
 		if reqErr != nil {
 			reqErr.LogAndReturn(c)
 			return
 		}
-
-		fmt.Println("Link Token:", linkToken)
 		
 		c.JSON(http.StatusOK, map[string]string {
 			"link_token": linkToken,

@@ -138,14 +138,14 @@ func getUserDataHandler(sqlDB *sql.DB) gin.HandlerFunc {
 
 func getUserHandler(sqlDB *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		
 		username, ok := c.Params.Get("username")
+
 		if !ok  {
 			reqErr := gen_errors.InvalidRequestParamErr(errors.New("username not valid"))
 			reqErr.LogAndReturn(c)
 			return;
 		}
-		fmt.Println(username)
 
 		// 2. Set Name
 		user, reqErr := getUser(sqlDB, username)

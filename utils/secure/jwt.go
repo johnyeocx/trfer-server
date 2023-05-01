@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	accessTokenExpiry = time.Second * 5
+	accessTokenExpiry = time.Second * 100
 	refreshTokenExpiry = time.Minute * 200
 )
 
