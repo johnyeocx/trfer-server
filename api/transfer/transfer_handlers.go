@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	"github.com/johnyeocx/usual/server2/utils/helpers"
@@ -53,13 +54,23 @@ func transferWebhookHandler(sqlDB *sql.DB) gin.HandlerFunc {
 		const MaxBodyBytes = int64(65536)
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
 
-		_, err := io.ReadAll(c.Request.Body)
+		fmt.Println("Got request body")
+		payload, err := io.ReadAll(c.Request.Body)
+		fmt.Println("Read in req body:", payload)
 		if err != nil {
+			fmt.Println("Failed to io.readall:", err)
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
+		
+		event := map[string]interface{}{}
+		if err := json.Unmarshal(payload, &event); err != nil {
+			c.JSON(http.StatusBadRequest, err)
+			return
+		}	
 
-		// fmt.Println(payload)
-		fmt.Println("Received webhook event!")
+		fmt.Println("EVENT:", event)
+
+		c.JSON(200, nil)
 	}
 }
