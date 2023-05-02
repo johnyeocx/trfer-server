@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	"github.com/johnyeocx/usual/server2/utils/helpers"
@@ -33,11 +32,12 @@ func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 		}
 
 		if (reqBody.Amount > 5.00) {
-			fmt.Println("Amt too hight")
+			fmt.Println("Amt too high!")
 			c.JSON(http.StatusBadRequest, errors.New("amount too high"))
+			return;
 		}
 
-		linkToken, reqErr := TransferOpenAmt(sqlDB, plaidCli, reqBody.ToUsername, reqBody.Amount)
+		linkToken, reqErr := TransferOpenAmt(sqlDB, plaidCli, reqBody.ToUsername, reqBody.Amount, reqBody.Note)
 		if reqErr != nil {
 			reqErr.LogAndReturn(c)
 			return
@@ -62,15 +62,8 @@ func transferWebhookHandler(sqlDB *sql.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
-		
-		event := map[string]interface{}{}
-		if err := json.Unmarshal(payload, &event); err != nil {
-			c.JSON(http.StatusBadRequest, err)
-			return
-		}	
 
-		fmt.Println("EVENT:", event)
-
-		c.JSON(200, nil)
+		// fmt.Println(payload)
+		fmt.Println("Received webhook event!")
 	}
 }

@@ -5,3 +5,4 @@ type SubStatus string
 
 type OtpType string
 type TokenType string
+type PaymentStatus string
