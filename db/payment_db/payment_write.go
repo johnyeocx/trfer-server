@@ -12,7 +12,6 @@ type PaymentDB struct {
 
 
 func (p *PaymentDB) InsertPayment(
-	sqlDB *sql.DB, 
 	payment models.Payment,
 ) (error) {
 	query := `INSERT INTO payment 
@@ -26,6 +25,20 @@ func (p *PaymentDB) InsertPayment(
 		payment.Note, 
 		payment.Created,
 		payment.PaymentStatus,
+	)
+
+	return err
+}
+
+
+func (p *PaymentDB) UpdatePaymentFromPIEvent(
+	piEvent models.PaymentInitiationEvent,
+) (error) {
+	query := `UPDATE payment SET payment_status=$1 WHERE plaid_payment_id=$2`
+
+	_, err := p.DB.Exec(query, 
+		piEvent.NewPaymentStatus, 
+		piEvent.PlaidPaymentID,
 	)
 
 	return err

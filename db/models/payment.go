@@ -15,3 +15,8 @@ type Payment struct {
 	Created 			time.Time				`json:"created"`
 	PaymentStatus		enums.PaymentStatus		`json:"payment_status"`
 }
+
+type PaymentInitiationEvent struct {
+	NewPaymentStatus	enums.PaymentStatus `json:"new_payment_status`
+	PlaidPaymentID 		string 				`json:"payment_id"`
+}

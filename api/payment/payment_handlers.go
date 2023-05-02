@@ -1,13 +1,16 @@
-package transfer
+package payment
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/johnyeocx/usual/server2/db/models"
+	"github.com/johnyeocx/usual/server2/utils/enums/PaymentStatus"
 	"github.com/johnyeocx/usual/server2/utils/helpers"
 	"github.com/plaid/plaid-go/v11/plaid"
 )
@@ -54,16 +57,44 @@ func transferWebhookHandler(sqlDB *sql.DB) gin.HandlerFunc {
 		const MaxBodyBytes = int64(65536)
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
 
-		fmt.Println("Got request body")
 		payload, err := io.ReadAll(c.Request.Body)
-		fmt.Println("Read in req body:", payload)
 		if err != nil {
-			fmt.Println("Failed to io.readall:", err)
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
 
-		// fmt.Println(payload)
-		fmt.Println("Received webhook event!")
+		event := map[string]interface{}{}
+		if err := json.Unmarshal(payload, &event); err != nil {
+			c.JSON(http.StatusBadRequest, err)
+			return
+		}	
+
+		fmt.Println("Webhook event:", event)
+		webhookType := event["webhook_type"].(string)
+		fmt.Println("Type:", webhookType)
+		switch webhookType {
+			case "PAYMENT_INITIATION": 
+				piEvent := decodePaymentInitiationWebhook(event)
+				fmt.Println("PIEvent:", piEvent)
+				reqErr := UpdatePaymentFromPIEvent(sqlDB, piEvent)
+				if reqErr != nil {
+					reqErr.LogAndReturn(c)
+					return
+				}
+				fmt.Println("Successfully inserted")
+		}
+
+		c.JSON(200, nil)
+	}
+}
+
+func decodePaymentInitiationWebhook (event map[string]interface{}) (models.PaymentInitiationEvent) {
+	
+	paymentStatus := event["new_payment_status"].(string)
+	paymentId := event["payment_id"].(string)
+
+	return models.PaymentInitiationEvent{
+		NewPaymentStatus: PaymentStatus.EventStrToPaymentStatus(paymentStatus),
+		PlaidPaymentID: paymentId,
 	}
 }

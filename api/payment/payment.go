@@ -1,4 +1,4 @@
-package transfer
+package payment
 
 import (
 	"database/sql"
@@ -37,7 +37,7 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 
 	// 4. Add payment to DB
 	p := payment_db.PaymentDB{DB: sqlDB}
-	err = p.InsertPayment(sqlDB, models.Payment{
+	err = p.InsertPayment(models.Payment{
 		PlaidPaymentID: paymentID,
 		Username: user.Username,
 		Amount: amount,
@@ -51,4 +51,14 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 	}
 
 	return linkToken, nil
+}
+
+func UpdatePaymentFromPIEvent(sqlDB *sql.DB, piEvent models.PaymentInitiationEvent) (*models.RequestError) {
+	p := payment_db.PaymentDB{DB: sqlDB}
+	err := p.UpdatePaymentFromPIEvent(piEvent)
+	if err != nil {
+		return banking_errors.UpdatePaymentFailedErr(err)
+	}
+
+	return nil
 }

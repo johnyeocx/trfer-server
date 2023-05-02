@@ -16,6 +16,7 @@ const (
 	CreatePaymentFailed BankingError = "create_payment_failed"
 
 	InsertPaymentFailed BankingError = "insert_payment_failed"
+	UpdatePaymentFailed BankingError = "update_payment_failed"
 )
 
 func CreateAuthLinkTokenFailedErr(err error) *models.RequestError {
@@ -65,10 +66,19 @@ func CreatePaymentFailedErr(err error) *models.RequestError {
 		Code: string(CreatePaymentFailed),
 	}
 }
+
 func InsertPaymentFailedErr(err error) *models.RequestError {
 	return &models.RequestError{
 		Err: err,
 		StatusCode: http.StatusBadGateway,
 		Code: string(InsertPaymentFailed),
+	}
+}
+
+func UpdatePaymentFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(UpdatePaymentFailed),
 	}
 }
