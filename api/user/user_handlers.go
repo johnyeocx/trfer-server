@@ -108,6 +108,7 @@ func initialiseBankingHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Hand
 
 		// 2. Set Name
 		reqErr := initialiseBanking(sqlDB, plaidCli, uId, reqBody.PublicToken)
+
 		if reqErr != nil {
 			reqErr.LogAndReturn(c)
 			return

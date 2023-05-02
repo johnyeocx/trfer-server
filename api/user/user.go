@@ -152,6 +152,12 @@ func initialiseBanking(
 ) (*models.RequestError) {
 
 	u := user_db.UserDB{DB: sqlDB}
+
+	err := u.SetPublicToken(uId, publicToken)
+	if err != nil {
+		return user_errors.SetPublicTokenFailedErr(err)
+	}
+
 	user, err := u.GetUserByID(uId)
 	if err != nil {
 		return user_errors.GetUserFailedErr(err)
@@ -159,23 +165,30 @@ func initialiseBanking(
 
 	// 1. Get access token
 	accessToken, err := my_plaid.GetAuthAccessToken(plaidCli, publicToken)
+	// fmt.Println("Access token :", accessToken)
 	if err != nil {
 		return banking_errors.GetAccessTokenFailedErr(err)
 	}
 
+	// In between here takes a while.
+	// time.Sleep(10 * time.Second)
+
 	// 2. Get account bank details
 	bacs, err := my_plaid.GetBACNumbers(plaidCli, accessToken)
+	// fmt.Println("Bacs sort code:", bacs.SortCode)
 	if err != nil {
 		return banking_errors.GetBACSFailedErr(err)
 	}
 	
 	recipientID, err := my_plaid.CreatePaymentRecipient(plaidCli, user.FullName(), bacs.Account, bacs.SortCode)
+	// fmt.Println("Recipient ID:", recipientID)
 	if err != nil {
 		return banking_errors.CreatePaymentRecipientFailedErr(err)
 	}
 
 	// 1. Set public token
 	err = u.SetPublicTokenAndRecipientID(uId, publicToken, recipientID)
+	// fmt.Println("Successfuly set public token")
 	if err != nil {
 		return user_errors.SetPublicTokenFailedErr(err)
 	}

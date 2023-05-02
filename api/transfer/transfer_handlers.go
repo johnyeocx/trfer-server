@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 
 func Routes(transferRouter *gin.RouterGroup, sqlDB *sql.DB, plaidCli *plaid.APIClient) {
 	transferRouter.POST("/open_amount", transferOpenAmtHandler(sqlDB, plaidCli))
+	transferRouter.POST("/webhook", transferWebhookHandler(sqlDB))
 }
 
 func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
@@ -43,5 +45,21 @@ func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 		c.JSON(http.StatusOK, map[string]string {
 			"link_token": linkToken,
 		})
+	}
+}
+
+func transferWebhookHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		const MaxBodyBytes = int64(65536)
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
+
+		_, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err)
+			return
+		}
+
+		// fmt.Println(payload)
+		fmt.Println("Received webhook event!")
 	}
 }
