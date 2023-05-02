@@ -69,9 +69,7 @@ func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 			return
 		}	
 
-		fmt.Println("Webhook event:", event)
 		webhookType := event["webhook_type"].(string)
-		fmt.Println("Type:", webhookType)
 		switch webhookType {
 			case "PAYMENT_INITIATION": 
 				piEvent := decodePaymentInitiationWebhook(event)
@@ -81,7 +79,6 @@ func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 					reqErr.LogAndReturn(c)
 					return
 				}
-				fmt.Println("Successfully inserted")
 		}
 
 		c.JSON(200, nil)
