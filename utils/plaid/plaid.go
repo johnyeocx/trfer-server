@@ -141,6 +141,7 @@ func CreatePaymentLinkToken(plaidCli *plaid.APIClient, userId int, paymentId str
 	paymentInitiationReq.PaymentId = &paymentId
 	request.SetPaymentInitiation(*paymentInitiationReq)
 	request.SetLinkCustomizationName("default")
+	request.SetWebhook("https://usual-app.com/transfer/webhook")
 
 	resp, _, err := plaidCli.PlaidApi.LinkTokenCreate(context.TODO()).LinkTokenCreateRequest(*request).Execute()
 	if err != nil {
