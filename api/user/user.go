@@ -159,6 +159,10 @@ func initialiseBanking(
 		return user_errors.GetUserFailedErr(err)
 	}
 
+	if (user.PublicToken.Valid) {
+		return banking_errors.AlreadyInitialisedBankingErr(err)
+	}
+
 	// 1. Get access token
 	accessToken, err := my_plaid.GetAuthAccessToken(plaidCli, publicToken)
 	// fmt.Println("Access token :", accessToken)
@@ -189,7 +193,7 @@ func initialiseBanking(
 	}
 
 	// 1. Set public token
-	err = u.SetPublicTokenAndRecipientID(uId, publicToken, recipientID)
+	err = u.SetRecipientID(uId, recipientID)
 	// fmt.Println("Successfuly set public token")
 	if err != nil {
 		return user_errors.SetPublicTokenFailedErr(err)

@@ -2,6 +2,7 @@ package payment
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/johnyeocx/usual/server2/db/models"
@@ -23,9 +24,19 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 		return "", user_errors.GetUserFailedErr(err)
 	}
 
-	// 2. Create payment request
-	paymentID, err := my_plaid.CreatePayment(plaidCli, user.RecipientID.String, amount)
+	lastPaymentId, err := u.GetLastPaymentID(user.ID)
 	if err != nil {
+		return "", user_errors.GetLastPaymentIDFailedErr(err)
+	}
+
+	
+	// create reference (could cause potential error in race condition (?))
+	reference := fmt.Sprintf("tmu%dp%d", user.ID, lastPaymentId)
+	
+	// 2. Create payment request
+	paymentID, err := my_plaid.CreatePayment(plaidCli, user.RecipientID.String, amount, reference)
+	if err != nil {
+		fmt.Println("Failed to create payment:", err)
 		return "", banking_errors.CreatePaymentFailedErr(err)
 	}
 
@@ -39,8 +50,9 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 	p := payment_db.PaymentDB{DB: sqlDB}
 	err = p.InsertPayment(models.Payment{
 		PlaidPaymentID: paymentID,
-		Username: user.Username,
+		UserID: user.ID,
 		Amount: amount,
+		Reference: reference,
 		Note: note,
 		Created: time.Now(),
 		PaymentStatus: PaymentStatus.Created,
@@ -53,9 +65,39 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 	return linkToken, nil
 }
 
-func UpdatePaymentFromPIEvent(sqlDB *sql.DB, piEvent models.PaymentInitiationEvent) (*models.RequestError) {
+func UpdatePaymentFromPIEvent(
+	sqlDB *sql.DB, plaidCli *plaid.APIClient, piEvent models.PaymentInitiationEvent) (*models.RequestError) {
 	p := payment_db.PaymentDB{DB: sqlDB}
-	err := p.UpdatePaymentFromPIEvent(piEvent)
+	u := user_db.UserDB{DB: sqlDB}
+
+	payment, err := p.GetPayment(piEvent.PlaidPaymentID)
+	if err != nil {
+		return banking_errors.GetPaymentFailedErr(err)
+	}
+
+	user, err := u.GetUserByID(payment.UserID)
+	if err != nil {
+		return user_errors.GetUserFailedErr(err)
+	}
+
+	transactions, err := my_plaid.GetUserTransactions(plaidCli, user.PublicToken.String, payment.Created)
+	if err != nil {
+		return banking_errors.GetTransactionsFailedErr(err)
+	}
+
+	txName := sql.NullString{
+		Valid: false,
+	}
+	
+	for _, transaction := range(transactions) {
+		txReferenceNumber := transaction.PaymentMeta.ReferenceNumber
+		if *txReferenceNumber.Get() == payment.Reference {
+			txName.Valid = true
+			txName.String = transaction.Name
+		}
+	}
+	
+	err = p.UpdatePaymentFromPIEvent(piEvent, txName)
 	if err != nil {
 		return banking_errors.UpdatePaymentFailedErr(err)
 	}

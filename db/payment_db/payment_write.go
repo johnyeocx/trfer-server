@@ -15,16 +15,17 @@ func (p *PaymentDB) InsertPayment(
 	payment models.Payment,
 ) (error) {
 	query := `INSERT INTO payment 
-	(plaid_payment_id, username, amount, note, created, payment_status) VALUES 
-	($1, $2, $3, $4, $5, $6)`
+	(plaid_payment_id, user_id, amount, note, created, payment_status, reference) VALUES 
+	($1, $2, $3, $4, $5, $6, $7)`
 
 	_, err := p.DB.Query(query, 
 		payment.PlaidPaymentID, 
-		payment.Username,
+		payment.UserID,
 		payment.Amount, 
 		payment.Note, 
 		payment.Created,
 		payment.PaymentStatus,
+		payment.Reference,
 	)
 
 	return err
@@ -33,11 +34,13 @@ func (p *PaymentDB) InsertPayment(
 
 func (p *PaymentDB) UpdatePaymentFromPIEvent(
 	piEvent models.PaymentInitiationEvent,
+	txName sql.NullString,
 ) (error) {
-	query := `UPDATE payment SET payment_status=$1 WHERE plaid_payment_id=$2`
+	query := `UPDATE payment SET payment_status=$1, name=$2 WHERE plaid_payment_id=$3`
 
 	_, err := p.DB.Exec(query, 
 		piEvent.NewPaymentStatus, 
+		txName,
 		piEvent.PlaidPaymentID,
 	)
 

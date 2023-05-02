@@ -9,6 +9,9 @@ import (
 type UserError string
 const (
 	GetUserFailed 		UserError = "get_user_failed"
+	GetLastPaymentIDFailed 		UserError = "get_last_payment_id_failed"
+
+
 	CreateUserFailed 	UserError = "create_user_failed"
 	InvalidEmail 		UserError = "invalid_email"
 
@@ -28,6 +31,15 @@ func GetUserFailedErr(err error) *models.RequestError {
 		Code: string(GetUserFailed),
 	}
 }
+
+func GetLastPaymentIDFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(GetLastPaymentIDFailed),
+	}
+}
+
 
 func CreateUserFailedErr(err error) *models.RequestError {
 	return &models.RequestError{

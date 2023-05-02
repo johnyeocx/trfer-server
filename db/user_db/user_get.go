@@ -92,3 +92,20 @@ func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 
 	return &user, nil
 }
+
+func (u *UserDB) GetLastPaymentID(uId int) (int, error) {
+	lastPaymentId := 0
+	err := u.DB.QueryRow(`SELECT 
+		payment_id FROM payment WHERE user_id=$1 ORDER BY payment_id DESC LIMIT 1`, 
+	uId).Scan(&lastPaymentId)
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+
+	if err != nil {
+		return -1, err
+	}
+
+	return lastPaymentId, nil
+}

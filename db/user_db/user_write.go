@@ -55,11 +55,11 @@ func (u *UserDB) SetName(id int, firstName string, lastName string) (error) {
 	return err
 }
 
-func (u *UserDB) SetPublicTokenAndRecipientID(id int, publicToken string, recipientId string) (error) {
+func (u *UserDB) SetRecipientID(id int, recipientId string) (error) {
 	
 	_, err := u.DB.Exec(
-		`UPDATE "user" SET public_token=$1, recipient_id=$2 WHERE user_id=$3`,
-		publicToken, recipientId, id,
+		`UPDATE "user" SET recipient_id=$1 WHERE user_id=$2`,
+		recipientId, id,
 	)
 
 	return err

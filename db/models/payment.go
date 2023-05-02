@@ -9,9 +9,10 @@ import (
 type Payment struct {
 	ID 					int 					`json:"payment_id"`
 	PlaidPaymentID 		string 					`json:"plaid_payment_id"`
-	Username		 	string 					`json:"username"`
+	UserID		 		int 					`json:"user_id"`
 	Amount				float64					`json:"amount"`
 	Note				string				 	`json:"note"`
+	Reference			string 					`json:"reference"`
 	Created 			time.Time				`json:"created"`
 	PaymentStatus		enums.PaymentStatus		`json:"payment_status"`
 }

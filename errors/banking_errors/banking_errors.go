@@ -17,6 +17,9 @@ const (
 
 	InsertPaymentFailed BankingError = "insert_payment_failed"
 	UpdatePaymentFailed BankingError = "update_payment_failed"
+	GetPaymentFailed BankingError = "get_payment_failed"
+	GetTransactionsFailed BankingError = "get_transactions_failed"
+	AlreadyInitialisedBanking BankingError = "already_initialised_banking"
 )
 
 func CreateAuthLinkTokenFailedErr(err error) *models.RequestError {
@@ -42,6 +45,23 @@ func GetAccessTokenFailedErr(err error) *models.RequestError {
 		Code: string(GetAccessTokenFailed),
 	}
 }
+
+func GetPaymentFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(GetPaymentFailed),
+	}
+}
+
+func GetTransactionsFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(GetTransactionsFailed),
+	}
+}
+
 
 func GetBACSFailedErr(err error) *models.RequestError {
 	return &models.RequestError{
@@ -82,3 +102,12 @@ func UpdatePaymentFailedErr(err error) *models.RequestError {
 		Code: string(UpdatePaymentFailed),
 	}
 }
+
+func AlreadyInitialisedBankingErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(AlreadyInitialisedBanking),
+	}
+}
+
