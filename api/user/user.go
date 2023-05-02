@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/johnyeocx/usual/server2/api/auth"
 	"github.com/johnyeocx/usual/server2/db/models"
@@ -153,11 +154,6 @@ func initialiseBanking(
 
 	u := user_db.UserDB{DB: sqlDB}
 
-	err := u.SetPublicToken(uId, publicToken)
-	if err != nil {
-		return user_errors.SetPublicTokenFailedErr(err)
-	}
-
 	user, err := u.GetUserByID(uId)
 	if err != nil {
 		return user_errors.GetUserFailedErr(err)
@@ -168,6 +164,12 @@ func initialiseBanking(
 	// fmt.Println("Access token :", accessToken)
 	if err != nil {
 		return banking_errors.GetAccessTokenFailedErr(err)
+	}
+
+	fmt.Println("Access Token:", accessToken)
+	err = u.SetPublicToken(uId, accessToken)
+	if err != nil {
+		return user_errors.SetPublicTokenFailedErr(err)
 	}
 
 	// In between here takes a while.
