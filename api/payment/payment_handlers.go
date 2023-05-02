@@ -18,7 +18,7 @@ import (
 
 func Routes(transferRouter *gin.RouterGroup, sqlDB *sql.DB, plaidCli *plaid.APIClient) {
 	transferRouter.POST("/open_amount", transferOpenAmtHandler(sqlDB, plaidCli))
-	transferRouter.POST("/webhook", transferWebhookHandler(sqlDB))
+	transferRouter.POST("/webhook", transferWebhookHandler(sqlDB, plaidCli))
 }
 
 func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
@@ -52,7 +52,7 @@ func transferOpenAmtHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 	}
 }
 
-func transferWebhookHandler(sqlDB *sql.DB) gin.HandlerFunc {
+func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		const MaxBodyBytes = int64(65536)
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
@@ -76,7 +76,7 @@ func transferWebhookHandler(sqlDB *sql.DB) gin.HandlerFunc {
 			case "PAYMENT_INITIATION": 
 				piEvent := decodePaymentInitiationWebhook(event)
 				fmt.Println("PIEvent:", piEvent)
-				reqErr := UpdatePaymentFromPIEvent(sqlDB, piEvent)
+				reqErr := UpdatePaymentFromPIEvent(sqlDB, plaidCli, piEvent)
 				if reqErr != nil {
 					reqErr.LogAndReturn(c)
 					return

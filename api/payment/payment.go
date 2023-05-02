@@ -70,7 +70,12 @@ func UpdatePaymentFromPIEvent(
 	p := payment_db.PaymentDB{DB: sqlDB}
 	u := user_db.UserDB{DB: sqlDB}
 
-	payment, err := p.GetPayment(piEvent.PlaidPaymentID)
+	txName := sql.NullString{
+		Valid: false,
+	}
+
+	if piEvent.NewPaymentStatus == PaymentStatus.Executed {
+		payment, err := p.GetPayment(piEvent.PlaidPaymentID)
 	if err != nil {
 		return banking_errors.GetPaymentFailedErr(err)
 	}
@@ -80,24 +85,27 @@ func UpdatePaymentFromPIEvent(
 		return user_errors.GetUserFailedErr(err)
 	}
 
-	transactions, err := my_plaid.GetUserTransactions(plaidCli, user.PublicToken.String, payment.Created)
-	if err != nil {
-		return banking_errors.GetTransactionsFailedErr(err)
-	}
+		transactions, err := my_plaid.GetUserTransactions(plaidCli, user.PublicToken.String, payment.Created)
+		if err != nil {
+			return banking_errors.GetTransactionsFailedErr(err)
+		}
 
-	txName := sql.NullString{
-		Valid: false,
-	}
-	
-	for _, transaction := range(transactions) {
-		txReferenceNumber := transaction.PaymentMeta.ReferenceNumber
-		if *txReferenceNumber.Get() == payment.Reference {
-			txName.Valid = true
-			txName.String = transaction.Name
+		for _, transaction := range(transactions) {
+			txReferenceNumber := transaction.PaymentMeta.ReferenceNumber
+			if *txReferenceNumber.Get() == payment.Reference {
+				txName.Valid = true
+				txName.String = transaction.Name
+			}
 		}
 	}
+
+	if (txName.Valid) {
+		fmt.Println("Transaction Name:", txName.String)
+	} else {
+		fmt.Println("No transaction name")
+	}
 	
-	err = p.UpdatePaymentFromPIEvent(piEvent, txName)
+	err := p.UpdatePaymentFromPIEvent(piEvent, txName)
 	if err != nil {
 		return banking_errors.UpdatePaymentFailedErr(err)
 	}
