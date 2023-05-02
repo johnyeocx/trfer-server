@@ -28,10 +28,10 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 	if err != nil {
 		return "", user_errors.GetLastPaymentIDFailedErr(err)
 	}
-
 	
 	// create reference (could cause potential error in race condition (?))
 	reference := fmt.Sprintf("tmu%dp%d", user.ID, lastPaymentId)
+	// reference := fmt.Sprintf("NIL")
 	
 	// 2. Create payment request
 	paymentID, err := my_plaid.CreatePayment(plaidCli, user.RecipientID.String, amount, reference)
