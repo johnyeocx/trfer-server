@@ -178,7 +178,10 @@ func GetUserTransactions(
 	createdDate time.Time,
 ) ([]plaid.Transaction, error) {
 	const iso8601TimeFormat = "2006-01-02"
-	startDate := createdDate.Format(iso8601TimeFormat)
+
+	year, month, day := createdDate.Date()
+    startDay :=  time.Date(year, month, day, 0, 0, 0, 0, createdDate.Location())
+	startDate := startDay.Format(iso8601TimeFormat)
 	endDate := time.Now().Add(time.Minute * 60).Format(iso8601TimeFormat)
 
 	request := plaid.NewTransactionsGetRequest(

@@ -68,44 +68,36 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 func UpdatePaymentFromPIEvent(
 	sqlDB *sql.DB, plaidCli *plaid.APIClient, piEvent models.PaymentInitiationEvent) (*models.RequestError) {
 	p := payment_db.PaymentDB{DB: sqlDB}
-	u := user_db.UserDB{DB: sqlDB}
 
-	txName := sql.NullString{
-		Valid: false,
-	}
+	// if piEvent.NewPaymentStatus == PaymentStatus.Executed {
+	// 	payment, err := p.GetPayment(piEvent.PlaidPaymentID)
 
-	if piEvent.NewPaymentStatus == PaymentStatus.Executed {
-		payment, err := p.GetPayment(piEvent.PlaidPaymentID)
-	if err != nil {
-		return banking_errors.GetPaymentFailedErr(err)
-	}
+	// 	if err != nil {
+	// 		return banking_errors.GetPaymentFailedErr(err)
+	// 	}
+		
+	// 	user, err := u.GetUserByID(payment.UserID)
+	// 	if err != nil {
+	// 		return user_errors.GetUserFailedErr(err)
+	// 	}
 
-	user, err := u.GetUserByID(payment.UserID)
-	if err != nil {
-		return user_errors.GetUserFailedErr(err)
-	}
+	// 	transactions, err := my_plaid.GetUserTransactions(plaidCli, user.PublicToken.String, payment.Created)
 
-		transactions, err := my_plaid.GetUserTransactions(plaidCli, user.PublicToken.String, payment.Created)
-		if err != nil {
-			return banking_errors.GetTransactionsFailedErr(err)
-		}
+	// 	if err != nil {
+	// 		return banking_errors.GetTransactionsFailedErr(err)
+	// 	}
 
-		for _, transaction := range(transactions) {
-			txReferenceNumber := transaction.PaymentMeta.ReferenceNumber
-			if *txReferenceNumber.Get() == payment.Reference {
-				txName.Valid = true
-				txName.String = transaction.Name
-			}
-		}
-	}
+	// 	for _, transaction := range(transactions) {
+	// 		txReferenceNumber := transaction.PaymentMeta.ReferenceNumber
+	// 		if *txReferenceNumber.Get() == payment.Reference {
+	// 			txName.Valid = true
+	// 			txName.String = transaction.Name
+	// 		}
+	// 	}
+	// }
 
-	if (txName.Valid) {
-		fmt.Println("Transaction Name:", txName.String)
-	} else {
-		fmt.Println("No transaction name")
-	}
 	
-	err := p.UpdatePaymentFromPIEvent(piEvent, txName)
+	err := p.UpdatePaymentFromPIEvent(piEvent)
 	if err != nil {
 		return banking_errors.UpdatePaymentFailedErr(err)
 	}

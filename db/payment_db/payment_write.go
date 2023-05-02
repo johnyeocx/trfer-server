@@ -34,13 +34,11 @@ func (p *PaymentDB) InsertPayment(
 
 func (p *PaymentDB) UpdatePaymentFromPIEvent(
 	piEvent models.PaymentInitiationEvent,
-	txName sql.NullString,
 ) (error) {
-	query := `UPDATE payment SET payment_status=$1, name=$2 WHERE plaid_payment_id=$3`
+	query := `UPDATE payment SET payment_status=$1 WHERE plaid_payment_id=$2`
 
 	_, err := p.DB.Exec(query, 
 		piEvent.NewPaymentStatus, 
-		txName,
 		piEvent.PlaidPaymentID,
 	)
 
