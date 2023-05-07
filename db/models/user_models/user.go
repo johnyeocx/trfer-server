@@ -14,6 +14,7 @@ type User struct {
 	PublicToken			models.JsonNullString 	`json:"public_token"`
 	RecipientID		models.JsonNullString 	`json:"recipient_id"`
 	SignInProvider		enums.SignInProvider	`json:"signin_provider"`
+	PageTheme 			string			`json:"page_theme"`
 }
 
 func (u* User) FullName() string{

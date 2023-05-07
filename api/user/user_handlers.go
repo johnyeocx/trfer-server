@@ -20,6 +20,12 @@ func Routes(userRouter *gin.RouterGroup, sqlDB *sql.DB, s3Cli *s3.Client, plaidC
 	userRouter.POST("/email_register", emailRegisterHandler(sqlDB))
 	userRouter.POST("/name_and_photo", setNameAndPhotoHandler(sqlDB, s3Cli))
 	userRouter.POST("/initialise_banking", initialiseBankingHandler(sqlDB, plaidCli))
+
+	userRouter.PATCH("/profile_image", setProfileImgHandler(sqlDB, s3Cli))
+	userRouter.PATCH("/name", setNameHandler(sqlDB))
+	userRouter.PATCH("/username", setUsernameHandler(sqlDB))
+	userRouter.PATCH("/page_theme", setPageThemeHandler(sqlDB))
+
 	userRouter.GET("/data", getUserDataHandler(sqlDB))
 	userRouter.GET("/:username", getUserHandler(sqlDB))
 }
@@ -88,6 +94,116 @@ func setNameAndPhotoHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func setProfileImgHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+		
+		// 3. Generate Upload Link
+		key := fmt.Sprintf("user/profile_image/%d", uId)
+		cloud.DeleteObject(s3Cli, key)
+		uploadUrl, err := cloud.GetImageUploadUrl(s3Cli, key)
+		if err != nil {
+			reqErr := util_errors.GetPresignedUrlFailedErr(err)
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, map[string]string {
+			"upload_url": uploadUrl,
+		})
+	}
+}
+
+func setNameHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+		
+		// 1. Get user email and search if exists in db
+		reqBody := struct {
+			FirstName  	 string `json:"first_name"`
+			LastName  	 string `json:"last_name"`
+		}{}
+		
+		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
+			return
+		}
+
+		// 2. Set Name
+		reqErr := setName(sqlDB, uId, reqBody.FirstName, reqBody.LastName)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
+func setUsernameHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+		
+		// 1. Get user email and search if exists in db
+		reqBody := struct {
+			Username  	 string `json:"username"`
+		}{}
+		
+		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
+			return
+		}
+
+		// 2. Set Name
+		reqErr := setUsername(sqlDB, uId, reqBody.Username)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
+func setPageThemeHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+		
+		// 1. Get user email and search if exists in db
+		reqBody := struct {
+			PageTheme  	 string `json:"page_theme"`
+		}{}
+		
+		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
+			return
+		}
+
+		// 2. Set Name
+		reqErr := setPageTheme(sqlDB, uId, reqBody.PageTheme)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
 
 func initialiseBankingHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
 	return func(c *gin.Context) {

@@ -10,6 +10,7 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models/user_models"
 	"github.com/johnyeocx/usual/server2/db/user_db"
 	"github.com/johnyeocx/usual/server2/errors/banking_errors"
+	gen_errors "github.com/johnyeocx/usual/server2/errors/general_errors"
 	"github.com/johnyeocx/usual/server2/errors/user_errors"
 	"github.com/johnyeocx/usual/server2/utils/enums/OtpType"
 	"github.com/johnyeocx/usual/server2/utils/media"
@@ -133,6 +134,9 @@ func setName(
 	firstName string, 
 	lastName string,
 ) (*models.RequestError) {
+	if (firstName == "" || lastName == "") {
+		return gen_errors.InvalidRequestParamErr(errors.New("first or last name is empty"))
+	}
 
 	u := user_db.UserDB{DB: sqlDB}
 	
@@ -140,6 +144,53 @@ func setName(
 	
 	if err != nil {
 		return user_errors.SetNameFailedErr(err)
+	}
+
+	return nil
+}
+
+func setUsername(
+	sqlDB *sql.DB, 
+	uId int,
+	username string, 
+) (*models.RequestError) {
+
+	if (username == "") {
+		return gen_errors.InvalidRequestParamErr(errors.New("username is empty"))
+	}
+
+	u := user_db.UserDB{DB: sqlDB}
+	taken, reqErr := checkUsernameTaken(sqlDB, username)
+	if reqErr != nil {
+		return reqErr
+	}
+
+	if (taken) {
+		return user_errors.UsernameTakenErr(errors.New("username already taken"))
+	}
+	
+	err := u.SetUsername(uId, username)
+	
+	if err != nil {
+		return user_errors.SetNameFailedErr(err)
+	}
+
+	return nil
+}
+
+
+func setPageTheme(
+	sqlDB *sql.DB, 
+	uId int,
+	pageTheme string, 
+) (*models.RequestError) {
+
+	u := user_db.UserDB{DB: sqlDB}
+	
+	err := u.SetPageTheme(uId, pageTheme)
+	
+	if err != nil {
+		return user_errors.SetPageThemeFailedErr(err)
 	}
 
 	return nil

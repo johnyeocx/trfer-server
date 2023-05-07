@@ -22,6 +22,8 @@ const (
 	SetEmailVerifiedFailed 		UserError = "set_email_verified_failed"
 	SetNameFailed 		UserError = "set_name_failed"
 	SetPublicTokenFailed 		UserError = "set_public_token_failed"
+	SetPageThemeFailed 		UserError = "set_page_theme_failed"
+	SetUsernameFailed 		UserError = "set_username_failed"
 )
 
 func GetUserFailedErr(err error) *models.RequestError {
@@ -104,3 +106,20 @@ func SetPublicTokenFailedErr(err error) *models.RequestError {
 		Code: string(SetPublicTokenFailed),
 	}
 }
+
+func SetPageThemeFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(SetPageThemeFailed),
+	}
+}
+
+func SetUsernameFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(SetUsernameFailed),
+	}
+}
+

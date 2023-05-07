@@ -55,6 +55,27 @@ func (u *UserDB) SetName(id int, firstName string, lastName string) (error) {
 	return err
 }
 
+func (u *UserDB) SetUsername(id int, username string) (error) {
+	
+	_, err := u.DB.Exec(
+		`UPDATE "user" SET username=$1 WHERE user_id=$2`,
+		username, id,
+	)
+
+	return err
+}
+
+
+func (u *UserDB) SetPageTheme(id int, pageTheme string) (error) {
+	
+	_, err := u.DB.Exec(
+		`UPDATE "user" SET page_theme=$1 WHERE user_id=$2`,
+		pageTheme, id,
+	)
+
+	return err
+}
+
 func (u *UserDB) SetRecipientID(id int, recipientId string) (error) {
 	
 	_, err := u.DB.Exec(
