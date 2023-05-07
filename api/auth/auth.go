@@ -15,7 +15,31 @@ import (
 	"github.com/johnyeocx/usual/server2/utils/secure"
 )
 
-func login (sqlDB *sql.DB, email string) (*models.RequestError) {
+
+
+func externalLogin(sqlDB *sql.DB, email string) (map[string]string, *models.RequestError) {
+	u := user_db.UserDB{DB: sqlDB}
+	user, err := u.GetUserByEmail(email)
+
+	if err == sql.ErrNoRows {
+		return nil, user_errors.NoEmailFoundErr(err)
+	}
+	if err != nil {
+		return nil, user_errors.GetUserFailedErr(err)
+	}
+
+	accessToken, refreshToken, err := secure.GenerateTokenPair(user.ID, TokenType.User)
+	if err != nil {
+		return nil, auth_errors.GenerateTokensFailedErr(err)
+	}
+
+	return map[string]string {
+		"access_token": accessToken,
+		"refresh_token": refreshToken,
+	}, nil
+}
+
+func login(sqlDB *sql.DB, email string) (*models.RequestError) {
 	u := user_db.UserDB{DB: sqlDB}
 
 	_, err := u.GetUserByEmail(email)
@@ -34,7 +58,7 @@ func login (sqlDB *sql.DB, email string) (*models.RequestError) {
 	return nil
 }
 
-func verifyEmailLoginOtp (sqlDB *sql.DB, email string, otp string) (map[string]string, *models.RequestError){
+func verifyEmailLoginOtp(sqlDB *sql.DB, email string, otp string) (map[string]string, *models.RequestError){
 	reqErr := VerifyEmailOtp(sqlDB, email, otp, OtpType.EmailLogin)
 	if reqErr != nil {
 		return nil, reqErr
@@ -58,7 +82,7 @@ func verifyEmailLoginOtp (sqlDB *sql.DB, email string, otp string) (map[string]s
 }
 
 
-func verifyEmailRegisterOtp (sqlDB *sql.DB, email string, otp string) (map[string]string, *models.RequestError){
+func verifyEmailRegisterOtp(sqlDB *sql.DB, email string, otp string) (map[string]string, *models.RequestError){
 
 	// 1. Verify Email
 	reqErr := VerifyEmailOtp(sqlDB, email, otp, OtpType.EmailRegister)

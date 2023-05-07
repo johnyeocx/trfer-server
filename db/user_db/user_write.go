@@ -5,6 +5,7 @@ import "github.com/johnyeocx/usual/server2/db/models/user_models"
 func (u *UserDB) CreateUserFromEmail (
 	email string,
 	username string,
+	verified bool,
 ) (*int, error) {
 
 	_, err := u.DB.Exec(`DELETE from "user" WHERE email=$1 AND email_verified=FALSE`, email)
@@ -19,9 +20,9 @@ func (u *UserDB) CreateUserFromEmail (
 
 	var userId int
 	err = u.DB.QueryRow(`
-		INSERT into "user" (email, username) VALUES ($1, $2)
+		INSERT into "user" (email, username, email_verified) VALUES ($1, $2, $3)
 		RETURNING user_id`,
-		email, username,
+		email, username, verified,
 	).Scan(&userId)
 
 	if err != nil {

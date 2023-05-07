@@ -3,6 +3,7 @@ package routes
 import (
 	"database/sql"
 
+	firebase "firebase.google.com/go"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/johnyeocx/usual/server2/api/auth"
@@ -19,13 +20,14 @@ func CreateRoutes(
 	plaidCli *plaid.APIClient,
 	sqlDB *sql.DB,
 	s3Cli *s3.Client,
+	fbApp *firebase.App,
 ) {
 	apiRoute := router.Group("/api")
 	{
 		// c_auth.Routes(apiRoute.Group("/c/auth"), sqlDB, fbApp)
 		// subscription.Routes(apiRoute.Group("/c/sub"), sqlDB)
-		user.Routes(apiRoute.Group("/user"), sqlDB, s3Cli, plaidCli)
-		auth.Routes(apiRoute.Group("/auth"), sqlDB)
+		user.Routes(apiRoute.Group("/user"), sqlDB, s3Cli, plaidCli, fbApp)
+		auth.Routes(apiRoute.Group("/auth"), sqlDB, fbApp)
 		banking.Routes(apiRoute.Group("/banking"), sqlDB, plaidCli)
 		payment.Routes(apiRoute.Group("/payment"), sqlDB, plaidCli)
 	}

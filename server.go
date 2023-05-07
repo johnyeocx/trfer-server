@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/johnyeocx/usual/server2/db"
+	my_fb "github.com/johnyeocx/usual/server2/firebase"
 	"github.com/johnyeocx/usual/server2/routes"
 	"github.com/johnyeocx/usual/server2/utils/cloud"
 	"github.com/johnyeocx/usual/server2/utils/middleware"
@@ -24,6 +25,7 @@ func main() {
 	psqlDB := db.Connect()
 	s3Cli := cloud.ConnectAWS()
 	plaidCli := my_plaid.CreateClient()
+	fbApp, _ := my_fb.CreateFirebaseApp()
 
 	router := gin.Default()
 
@@ -49,7 +51,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Welcome to the usual api")
 	})
-	routes.CreateRoutes(router, plaidCli, psqlDB, s3Cli)
+	routes.CreateRoutes(router, plaidCli, psqlDB, s3Cli, fbApp)
 	
 	router.Run(":8080")
 }

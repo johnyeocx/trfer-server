@@ -9,16 +9,22 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models"
 	"github.com/johnyeocx/usual/server2/db/models/user_models"
 	"github.com/johnyeocx/usual/server2/db/user_db"
+	"github.com/johnyeocx/usual/server2/errors/auth_errors"
 	"github.com/johnyeocx/usual/server2/errors/banking_errors"
 	gen_errors "github.com/johnyeocx/usual/server2/errors/general_errors"
 	"github.com/johnyeocx/usual/server2/errors/user_errors"
 	"github.com/johnyeocx/usual/server2/utils/enums/OtpType"
+	"github.com/johnyeocx/usual/server2/utils/enums/TokenType"
 	"github.com/johnyeocx/usual/server2/utils/media"
 	my_plaid "github.com/johnyeocx/usual/server2/utils/plaid"
+	"github.com/johnyeocx/usual/server2/utils/secure"
 	"github.com/plaid/plaid-go/v11/plaid"
 )
 
-func checkUsernameTaken(sqlDB *sql.DB, username string) (bool, *models.RequestError) {
+
+
+
+func CheckUsernameTaken(sqlDB *sql.DB, username string) (bool, *models.RequestError) {
 	// step 1: check that email is not already taken
 	u := user_db.UserDB{DB: sqlDB}
 	_, err := u.GetUserByUsername(username)
@@ -34,7 +40,7 @@ func checkUsernameTaken(sqlDB *sql.DB, username string) (bool, *models.RequestEr
 	return true, nil
 }
 
-func checkEmailTaken(sqlDB *sql.DB, email string) (bool, *models.RequestError) {
+func CheckEmailTaken(sqlDB *sql.DB, email string) (bool, *models.RequestError) {
 
 	// step 1: check that email is not already taken
 	u := user_db.UserDB{DB: sqlDB}
@@ -81,6 +87,49 @@ func getUser(
 	return user, nil
 }
 
+func ExternalRegister(sqlDB *sql.DB, email string, username string) (map[string]string, *models.RequestError) {
+	if (username == "" || email == "") {
+		return nil, user_errors.InvalidEmailErr(errors.New("invalid email"))
+	}
+
+	// step 1: check that username is not already taken
+	taken, reqErr := CheckUsernameTaken(sqlDB, username)
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	if taken {
+		return nil, user_errors.UsernameTakenErr(errors.New("username already taken"))
+	}
+
+	// step 2: check that email is not already taken
+	taken, reqErr = CheckEmailTaken(sqlDB, email)
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	if taken {
+		return nil, user_errors.EmailTakenErr(errors.New("email already taken"))
+	}
+
+	// step 3: create new entry
+	u := user_db.UserDB{DB: sqlDB}
+	uId, err := u.CreateUserFromEmail(email, username, true)
+	if err != nil {
+		return nil, user_errors.CreateUserFailedErr(err)
+	}
+
+	accessToken, refreshToken, err := secure.GenerateTokenPair(*uId, TokenType.User)
+	if err != nil {
+		return nil, auth_errors.GenerateTokensFailedErr(err)
+	}
+
+	return map[string]string {
+		"access_token": accessToken,
+		"refresh_token": refreshToken,
+	}, nil
+}
+
 func emailRegister(
 	sqlDB *sql.DB, 
 	username string, 
@@ -92,7 +141,7 @@ func emailRegister(
 	}
 
 	// step 1: check that username is not already taken
-	taken, reqErr := checkUsernameTaken(sqlDB, email)
+	taken, reqErr := CheckUsernameTaken(sqlDB, email)
 	if reqErr != nil {
 		return reqErr
 	}
@@ -102,7 +151,7 @@ func emailRegister(
 	}
 
 	// step 2: check that email is not already taken
-	taken, reqErr = checkEmailTaken(sqlDB, email)
+	taken, reqErr = CheckEmailTaken(sqlDB, email)
 	if reqErr != nil {
 		return reqErr
 	}
@@ -113,7 +162,7 @@ func emailRegister(
 
 	// step 3: create new entry
 	u := user_db.UserDB{DB: sqlDB}
-	_, err := u.CreateUserFromEmail(email, username)
+	_, err := u.CreateUserFromEmail(email, username, false)
 	if err != nil {
 		return user_errors.CreateUserFailedErr(err)
 	}
@@ -160,7 +209,7 @@ func setUsername(
 	}
 
 	u := user_db.UserDB{DB: sqlDB}
-	taken, reqErr := checkUsernameTaken(sqlDB, username)
+	taken, reqErr := CheckUsernameTaken(sqlDB, username)
 	if reqErr != nil {
 		return reqErr
 	}

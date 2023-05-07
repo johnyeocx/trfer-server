@@ -2,8 +2,10 @@ package auth
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 
+	firebase "firebase.google.com/go"
 	"github.com/gin-gonic/gin"
 	"github.com/johnyeocx/usual/server2/utils/enums/TokenType"
 	"github.com/johnyeocx/usual/server2/utils/helpers"
@@ -11,16 +13,54 @@ import (
 )
 
 
-func Routes(authRouter *gin.RouterGroup, sqlDB *sql.DB) {
+func Routes(authRouter *gin.RouterGroup, sqlDB *sql.DB, fbApp *firebase.App) {
 	authRouter.POST("/validate_token", validateTokenHandler(sqlDB))
 	authRouter.POST("/refresh_user_token", refreshUserTokenHandler(sqlDB))
 	
 	authRouter.POST("/verify_email_register_otp", verifyEmailRegisterOtpHandler(sqlDB))
 
 	// login
+	authRouter.POST("/external_login", externalLoginHandler(sqlDB, fbApp))
 	authRouter.POST("/login", loginHandler(sqlDB))
 	authRouter.POST("/verify_email_login_otp", verifyEmailLoginOtpHandler(sqlDB))
 }
+
+func externalLoginHandler(sqlDB *sql.DB, fbApp *firebase.App) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		
+		// 1. Get user email and search if exists in db
+		reqBody := struct {
+			Token  		 string `json:"token"`
+		}{}
+
+		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
+			return
+		}
+
+		client, err := fbApp.Auth(c)
+		if err != nil {
+			log.Fatalf("error getting Auth client: %v\n", err)
+		}
+
+		// Verify the ID token first.
+		token, err := client.VerifyIDToken(c, reqBody.Token)
+		if err != nil {
+				log.Fatal(err)
+		}
+
+		email := token.Claims["email"]
+
+		res, reqErr := externalLogin(sqlDB, email.(string))
+
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return;
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
+}
+
 
 func loginHandler(sqlDB *sql.DB) gin.HandlerFunc {
 	return func (c *gin.Context) {
