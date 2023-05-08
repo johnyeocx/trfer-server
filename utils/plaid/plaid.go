@@ -38,6 +38,7 @@ func CreateLinkToken(plaidCli *plaid.APIClient, userId int) (string, error) {
 	)
 	request.SetProducts([]plaid.Products{plaid.PRODUCTS_AUTH, plaid.PRODUCTS_TRANSACTIONS})
 	request.SetLinkCustomizationName("default")
+	request.SetWebhook("https://usual-app.com/api/banking/webhook")
 	// request.SetWebhook("https://google.com")
 
 	resp, _, err := plaidCli.PlaidApi.LinkTokenCreate(context.TODO()).LinkTokenCreateRequest(*request).Execute()
@@ -127,7 +128,11 @@ func CreatePayment(
 	return paymentID, nil
 }
 
-func CreatePaymentLinkToken(plaidCli *plaid.APIClient, userId int, paymentId string) (string, error) {
+func CreatePaymentLinkToken(
+	plaidCli *plaid.APIClient, 
+	userId int, 
+	paymentId string,
+) (string, error) {
 	user := plaid.LinkTokenCreateRequestUser{
 		ClientUserId: fmt.Sprintf("%d", userId),
 	}
@@ -202,4 +207,46 @@ func GetUserTransactions(
 	}
 
 	return transactionsResp.GetTransactions(), nil
+}
+
+
+func SyncTransactions(
+	plaidCli *plaid.APIClient, 
+	accessToken string,
+	cursor *string,
+) (error) {
+
+	request := plaid.NewTransactionsSyncRequest(accessToken)
+	if cursor != nil {
+		request.SetCursor(*cursor)
+	}
+
+	resp, _, err := plaidCli.PlaidApi.TransactionsSync(
+		context.TODO(),
+	).TransactionsSyncRequest(*request).Execute()
+
+	if err != nil {
+		return err
+	}
+
+	nextCursor := resp.GetNextCursor()
+	fmt.Println("Next cursor:", nextCursor)
+	fmt.Println("Added:", resp.GetAdded())
+	fmt.Println("Modified:", resp.GetModified())
+	fmt.Println("Removed:", resp.GetRemoved())
+	return nil
+
+	// // Add this page of results
+	// added = append(added, resp.GetAdded()...)
+	// modified = append(modified, resp.GetModified()...)
+	// removed = append(removed, resp.GetRemoved()...)
+
+	// hasMore = resp.GetHasMore()
+
+	// // Update cursor to the next cursor
+	// cursor = &resp.GetNextCursor()
+
+
+	// // Persist cursor and updated data
+	// database.applyUpdates(itemId, added, modified, removed, cursor)
 }

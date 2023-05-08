@@ -3,7 +3,6 @@ package user
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/johnyeocx/usual/server2/api/auth"
 	"github.com/johnyeocx/usual/server2/db/models"
@@ -20,9 +19,6 @@ import (
 	"github.com/johnyeocx/usual/server2/utils/secure"
 	"github.com/plaid/plaid-go/v11/plaid"
 )
-
-
-
 
 func CheckUsernameTaken(sqlDB *sql.DB, username string) (bool, *models.RequestError) {
 	// step 1: check that email is not already taken
@@ -87,7 +83,11 @@ func getUser(
 	return user, nil
 }
 
-func ExternalRegister(sqlDB *sql.DB, email string, username string) (map[string]string, *models.RequestError) {
+func ExternalRegister(
+	sqlDB *sql.DB, 
+	email string, 
+	username string,
+) (map[string]string, *models.RequestError) {
 	if (username == "" || email == "") {
 		return nil, user_errors.InvalidEmailErr(errors.New("invalid email"))
 	}
@@ -227,7 +227,6 @@ func setUsername(
 	return nil
 }
 
-
 func setPageTheme(
 	sqlDB *sql.DB, 
 	uId int,
@@ -270,14 +269,10 @@ func initialiseBanking(
 		return banking_errors.GetAccessTokenFailedErr(err)
 	}
 
-	fmt.Println("Access Token:", accessToken)
 	err = u.SetPublicToken(uId, accessToken)
 	if err != nil {
 		return user_errors.SetPublicTokenFailedErr(err)
 	}
-
-	// In between here takes a while.
-	// time.Sleep(10 * time.Second)
 
 	// 2. Get account bank details
 	bacs, err := my_plaid.GetBACNumbers(plaidCli, accessToken)
@@ -298,6 +293,9 @@ func initialiseBanking(
 	if err != nil {
 		return user_errors.SetPublicTokenFailedErr(err)
 	}
+
+	// Call transactions/sync 
+	go my_plaid.SyncTransactions(plaidCli, accessToken, nil)
 
 	return nil
 }

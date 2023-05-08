@@ -33,7 +33,6 @@ func Routes(userRouter *gin.RouterGroup, sqlDB *sql.DB, s3Cli *s3.Client, plaidC
 	userRouter.GET("/:username", getUserHandler(sqlDB))
 }
 
-
 func externalRegisterHandler(sqlDB *sql.DB, fbApp *firebase.App) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		
@@ -244,7 +243,6 @@ func setPageThemeHandler(sqlDB *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, nil)
 	}
 }
-
 
 func initialiseBankingHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
