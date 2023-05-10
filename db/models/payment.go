@@ -16,7 +16,7 @@ type Payment struct {
 	Created 			time.Time				`json:"created"`
 	PaymentStatus		enums.PaymentStatus		`json:"payment_status"`
 	AccessToken			JsonNullString			`json:"access_token"`
-	TransactionName		JsonNullString			`json:"transaction_name"`
+	PayerName			JsonNullString			`json:"payer_name"`
 }
 
 type PaymentInitiationEvent struct {

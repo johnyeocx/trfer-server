@@ -31,7 +31,6 @@ func (p *PaymentDB) GetUnnamedPayments() ([]models.Payment, error) {
 		ORDER BY p.user_id, p.created ASC
 	`
 	
-	
 	rows, err := p.DB.Query(query)
 	if err != nil {
 		return nil, err

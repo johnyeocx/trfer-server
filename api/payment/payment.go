@@ -3,7 +3,6 @@ package payment
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/johnyeocx/usual/server2/db/models"
@@ -102,54 +101,54 @@ func UpdatePaymentFromPIEvent(
 	return nil
 }
 
-func UpdatePaymentNames(
-	sqlDB *sql.DB, 
-	plaidCli *plaid.APIClient,
-	userId int,
-	accessToken string,
-	startDate time.Time,
-	endDate time.Time,
-	payments []models.Payment,
-) (error) {
-	txs, err := my_plaid.GetUserTransactions(plaidCli, accessToken, startDate, endDate)
-	if err != nil {
-		return err
-	}
+// func UpdatePaymentNames(
+// 	sqlDB *sql.DB, 
+// 	plaidCli *plaid.APIClient,
+// 	userId int,
+// 	accessToken string,
+// 	startDate time.Time,
+// 	endDate time.Time,
+// 	payments []models.Payment,
+// ) (error) {
+// 	txs, err := my_plaid.GetUserTransactions(plaidCli, accessToken, startDate, endDate)
+// 	if err != nil {
+// 		return err
+// 	}
 	
 
-	refToName := map[string]string{}
-	for _, tx := range(txs) {
-		if tx.PaymentMeta.ReferenceNumber.IsSet() {
-			refToName[*tx.PaymentMeta.ReferenceNumber.Get()] = tx.Name
-		}
-		fmt.Printf("Name: %s, Reference: %v\n", tx.Name, tx.PaymentMeta.ReferenceNumber)
-	}
-	fmt.Println(refToName)
+// 	refToName := map[string]string{}
+// 	for _, tx := range(txs) {
+// 		if tx.PaymentMeta.ReferenceNumber.IsSet() {
+// 			refToName[*tx.PaymentMeta.ReferenceNumber.Get()] = tx.Name
+// 		}
+// 		fmt.Printf("Name: %s, Reference: %v\n", tx.Name, tx.PaymentMeta.ReferenceNumber)
+// 	}
+// 	fmt.Println(refToName)
 
-	namedPayments := []models.Payment{}
-	for _, payment := range(payments) {
-		ref := payment.Reference
-		fmt.Println(ref)
-		if val, ok := refToName[ref]; ok {
-			payment.TransactionName = models.JsonNullString{
-				sql.NullString{
-					Valid: true,
-					String: val,
-				},
-			}
-			namedPayments = append(namedPayments, payment)
-		}
-	}
+// 	namedPayments := []models.Payment{}
+// 	for _, payment := range(payments) {
+// 		ref := payment.Reference
+// 		fmt.Println(ref)
+// 		if val, ok := refToName[ref]; ok {
+// 			payment.TransactionName = models.JsonNullString{
+// 				sql.NullString{
+// 					Valid: true,
+// 					String: val,
+// 				},
+// 			}
+// 			namedPayments = append(namedPayments, payment)
+// 		}
+// 	}
 
-	if len(namedPayments) > 0 {
-		pDB := payment_db.PaymentDB{DB: sqlDB}
-		err := pDB.UpdatePaymentNames(namedPayments)
-		if err != nil {
-			fmt.Println("Failed to update payment named:", err)
-		}
-	} else {
-		log.Println("No payments to update")
-	}
+// 	if len(namedPayments) > 0 {
+// 		pDB := payment_db.PaymentDB{DB: sqlDB}
+// 		err := pDB.UpdatePaymentNames(namedPayments)
+// 		if err != nil {
+// 			fmt.Println("Failed to update payment named:", err)
+// 		}
+// 	} else {
+// 		log.Println("No payments to update")
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

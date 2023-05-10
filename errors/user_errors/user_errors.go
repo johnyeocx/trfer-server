@@ -10,6 +10,7 @@ type UserError string
 const (
 	GetUserFailed 		UserError = "get_user_failed"
 	GetLastPaymentIDFailed 		UserError = "get_last_payment_id_failed"
+	GetPaymentsFailed 		UserError = "get_payments_failed"
 	NoEmailFound			UserError = "no_email_found"
 
 
@@ -43,6 +44,15 @@ func GetLastPaymentIDFailedErr(err error) *models.RequestError {
 		Code: string(GetLastPaymentIDFailed),
 	}
 }
+
+func GetPaymentsFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(GetPaymentsFailed),
+	}
+}
+
 
 func NoEmailFoundErr(err error) *models.RequestError {
 	return &models.RequestError{

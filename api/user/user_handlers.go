@@ -31,6 +31,7 @@ func Routes(userRouter *gin.RouterGroup, sqlDB *sql.DB, s3Cli *s3.Client, plaidC
 
 	userRouter.GET("/data", getUserDataHandler(sqlDB))
 	userRouter.GET("/:username", getUserHandler(sqlDB))
+	userRouter.GET("/executed_payments", getUserPaymentsHandler(sqlDB))
 }
 
 func externalRegisterHandler(sqlDB *sql.DB, fbApp *firebase.App) gin.HandlerFunc {
@@ -311,5 +312,24 @@ func getUserHandler(sqlDB *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, user)
+	}
+}
+
+func getUserPaymentsHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+
+		// 2. Set Name
+		res, reqErr := getUserPayments(sqlDB, uId)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
 }

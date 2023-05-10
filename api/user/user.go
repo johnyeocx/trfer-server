@@ -13,6 +13,7 @@ import (
 	gen_errors "github.com/johnyeocx/usual/server2/errors/general_errors"
 	"github.com/johnyeocx/usual/server2/errors/user_errors"
 	"github.com/johnyeocx/usual/server2/utils/enums/OtpType"
+	"github.com/johnyeocx/usual/server2/utils/enums/PaymentStatus"
 	"github.com/johnyeocx/usual/server2/utils/enums/TokenType"
 	"github.com/johnyeocx/usual/server2/utils/media"
 	my_plaid "github.com/johnyeocx/usual/server2/utils/plaid"
@@ -81,6 +82,21 @@ func getUser(
 	}
 
 	return user, nil
+}
+
+func getUserPayments(
+	sqlDB *sql.DB, 
+	uId int,
+) ([]models.Payment, *models.RequestError) {
+
+	u := user_db.UserDB{DB: sqlDB}
+	payments, err := u.GetUserPaymentsByStatus(uId, PaymentStatus.Executed)
+
+	if err != nil {
+		return nil, user_errors.GetUserFailedErr(err)
+	}
+
+	return payments, nil
 }
 
 func ExternalRegister(

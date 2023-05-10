@@ -3,7 +3,9 @@ package user_db
 import (
 	"database/sql"
 
+	"github.com/johnyeocx/usual/server2/db/models"
 	"github.com/johnyeocx/usual/server2/db/models/user_models"
+	"github.com/johnyeocx/usual/server2/utils/enums"
 )
 
 
@@ -111,3 +113,42 @@ func (u *UserDB) GetLastPaymentID(uId int) (int, error) {
 
 	return lastPaymentId, nil
 }
+
+func (u *UserDB) GetUserPaymentsByStatus(
+	uId int, 
+	status enums.PaymentStatus,
+) ([]models.Payment, error) {
+	
+	rows, err := u.DB.Query(`SELECT 
+		payment_id, amount, note, reference, created, payer_name
+		FROM payment WHERE user_id=$1 AND payment_status=$2 ORDER BY created DESC`, 
+	uId, status)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	payments := []models.Payment{}
+	for rows.Next() {
+		p := models.Payment{}
+		err := rows.Scan(
+			&p.ID,
+			&p.Amount, 
+			&p.Note,
+			&p.Reference,
+			&p.Created,
+			&p.PayerName,
+		)
+
+		if err != nil {
+			continue
+		}
+
+		payments = append(payments, p)
+	}
+
+	return payments, nil
+}
+

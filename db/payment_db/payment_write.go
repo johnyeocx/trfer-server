@@ -55,7 +55,7 @@ func (p *PaymentDB) UpdatePaymentNames(
 
 	valuesString := ``
 	for i, payment := range(payments) {
-		valuesString += fmt.Sprintf(`(%d, '%s')`, payment.ID, payment.TransactionName.String)
+		valuesString += fmt.Sprintf(`(%d, '%s')`, payment.ID, payment.PayerName.String)
 		if i != len(payments) - 1 {
 			valuesString += ", "
 		}
@@ -63,15 +63,13 @@ func (p *PaymentDB) UpdatePaymentNames(
 
 	
 	queryString := fmt.Sprintf(`
-	UPDATE payment as p SET transaction_name=c.transaction_name FROM
+	UPDATE payment as p SET payer_name=c.payer_name FROM
 	(VALUES 
 		%s 
 	)
-	AS c(payment_id, transaction_name)
+	AS c(payment_id, payer_name)
 	WHERE c.payment_id=p.payment_id
 	`, valuesString)
-
-	fmt.Println(queryString)
 
 	p.DB.Exec(queryString)
 
