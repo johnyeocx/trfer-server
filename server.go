@@ -11,7 +11,6 @@ import (
 	"github.com/johnyeocx/usual/server2/utils/cloud"
 	"github.com/johnyeocx/usual/server2/utils/middleware"
 	my_plaid "github.com/johnyeocx/usual/server2/utils/plaid"
-	"github.com/johnyeocx/usual/server2/utils/scheduled"
 	"github.com/joho/godotenv"
 )
 
@@ -28,8 +27,8 @@ func main() {
 	plaidCli := my_plaid.CreateClient()
 	fbApp, _ := my_fb.CreateFirebaseApp()
 	// scheduled.RunScheduled(psqlDB, plaidCli)
-	scheduled.PollForTransactions(psqlDB, plaidCli)
-	return
+	// scheduled.PollForTransactions(psqlDB, plaidCli)
+	// return
 
 	// p := payment_db.PaymentDB{DB: psqlDB}
 	// p.UpdatePaymentNames([]models.Payment{
