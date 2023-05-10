@@ -12,14 +12,14 @@ import (
 
 func CreateClient() (*plaid.APIClient) {
 	clientId := os.Getenv("PLAID_CLIENT_ID")
-	secret := os.Getenv("PLAID_SANDBOX_SECRET")
-	// secret := os.Getenv("PLAID_DEV_SECRET")
+	// secret := os.Getenv("PLAID_SANDBOX_SECRET")
+	secret := os.Getenv("PLAID_DEV_SECRET")
 
 	configuration := plaid.NewConfiguration()
 	configuration.AddDefaultHeader("PLAID-CLIENT-ID", clientId)
 	configuration.AddDefaultHeader("PLAID-SECRET", secret)
-	configuration.UseEnvironment(plaid.Sandbox)
-	// configuration.UseEnvironment(plaid.Development)
+	// configuration.UseEnvironment(plaid.Sandbox)
+	configuration.UseEnvironment(plaid.Development)
 
 	client := plaid.NewAPIClient(configuration)
 	return client
