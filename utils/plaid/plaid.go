@@ -118,6 +118,10 @@ func CreatePayment(
 		*plaid.NewPaymentAmount("GBP", amount),
 	)
 
+	request.SetOptions(plaid.ExternalPaymentOptions{
+		RequestRefundDetails: *plaid.NewNullableBool(plaid.PtrBool(true)),
+	})
+
 
 	response, _, err := plaidCli.PlaidApi.PaymentInitiationPaymentCreate(context.TODO()).PaymentInitiationPaymentCreateRequest(*request).Execute()
 	if err != nil {
@@ -180,19 +184,18 @@ func GetPayment(
 func GetUserTransactions(
 	plaidCli *plaid.APIClient, 
 	accessToken string,
-	createdDate time.Time,
+	startDate time.Time,
+	endDate time.Time,
 ) ([]plaid.Transaction, error) {
 	const iso8601TimeFormat = "2006-01-02"
 
-	year, month, day := createdDate.Date()
-    startDay :=  time.Date(year, month, day, 0, 0, 0, 0, createdDate.Location())
-	startDate := startDay.Format(iso8601TimeFormat)
-	endDate := time.Now().Add(time.Minute * 60).Format(iso8601TimeFormat)
+	start := startDate.Format(iso8601TimeFormat)
+	end := endDate.Format(iso8601TimeFormat)
 
 	request := plaid.NewTransactionsGetRequest(
   		accessToken,
-  		startDate,
-  		endDate,
+  		start,
+		end,
 	)
 
 	options := plaid.TransactionsGetRequestOptions{
@@ -217,7 +220,7 @@ func SyncTransactions(
 ) (error) {
 
 	request := plaid.NewTransactionsSyncRequest(accessToken)
-	&cursor = "CAESJWV6Wk9PajNWTlBpN296OEVwQnI0aVlnZUJlbW1hS0M0RDRvN2EiDAiA9uSiBhCAjuCQAioLCJ/25KIGEIDL0TA="
+	*cursor = "CAESJWV6Wk9PajNWTlBpN296OEVwQnI0aVlnZUJlbW1hS0M0RDRvN2EiDAiA9uSiBhCAjuCQAioLCJ/25KIGEIDL0TA="
 	if cursor != nil {
 		request.SetCursor(*cursor)
 	}

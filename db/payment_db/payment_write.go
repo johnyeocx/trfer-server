@@ -2,6 +2,7 @@ package payment_db
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/johnyeocx/usual/server2/db/models"
 )
@@ -43,4 +44,34 @@ func (p *PaymentDB) UpdatePaymentFromPIEvent(
 	)
 
 	return err
+}
+
+func (p *PaymentDB) UpdatePaymentNames(
+	// piEvent models.PaymentInitiationEvent,
+	payments []models.Payment,
+) (error) {
+
+	valuesString := ``
+	for i, payment := range(payments) {
+		valuesString += fmt.Sprintf(`(%d, '%s')`, payment.ID, payment.TransactionName.String)
+		if i != len(payments) - 1 {
+			valuesString += ", "
+		}
+	}
+
+	
+	queryString := fmt.Sprintf(`
+	UPDATE payment as p SET transaction_name=c.transaction_name FROM
+	(VALUES 
+		%s 
+	)
+	AS c(payment_id, transaction_name)
+	WHERE c.payment_id=p.payment_id
+	`, valuesString)
+
+	fmt.Println(queryString)
+
+	p.DB.Exec(queryString)
+
+	return nil
 }

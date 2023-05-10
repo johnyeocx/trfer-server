@@ -11,6 +11,7 @@ import (
 	"github.com/johnyeocx/usual/server2/utils/cloud"
 	"github.com/johnyeocx/usual/server2/utils/middleware"
 	my_plaid "github.com/johnyeocx/usual/server2/utils/plaid"
+	"github.com/johnyeocx/usual/server2/utils/scheduled"
 	"github.com/joho/godotenv"
 )
 
@@ -26,7 +27,20 @@ func main() {
 	s3Cli := cloud.ConnectAWS()
 	plaidCli := my_plaid.CreateClient()
 	fbApp, _ := my_fb.CreateFirebaseApp()
+	// scheduled.RunScheduled(psqlDB, plaidCli)
+	scheduled.PollForTransactions(psqlDB, plaidCli)
+	return
 
+	// p := payment_db.PaymentDB{DB: psqlDB}
+	// p.UpdatePaymentNames([]models.Payment{
+	// 	models.Payment{ID: 23, TransactionName: models.JsonNullString{
+	// 		sql.NullString{Valid: true, String: "Test"},
+	// 	}},
+	// 	models.Payment{ID: 24, TransactionName: models.JsonNullString{
+	// 		sql.NullString{Valid: true, String: "Tes2"},
+	// 	}},
+	// })
+	
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{

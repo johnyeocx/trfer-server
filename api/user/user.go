@@ -258,7 +258,7 @@ func initialiseBanking(
 		return user_errors.GetUserFailedErr(err)
 	}
 
-	if (user.PublicToken.Valid) {
+	if (user.BankConnected) {
 		return banking_errors.AlreadyInitialisedBankingErr(err)
 	}
 
@@ -269,9 +269,9 @@ func initialiseBanking(
 		return banking_errors.GetAccessTokenFailedErr(err)
 	}
 
-	err = u.SetPublicToken(uId, accessToken)
+	err = u.SetAccessToken(uId, accessToken)
 	if err != nil {
-		return user_errors.SetPublicTokenFailedErr(err)
+		return user_errors.SetAccessTokenTokenFailedErr(err)
 	}
 
 	// 2. Get account bank details
@@ -291,7 +291,7 @@ func initialiseBanking(
 	err = u.SetRecipientID(uId, recipientID)
 	// fmt.Println("Successfuly set public token")
 	if err != nil {
-		return user_errors.SetPublicTokenFailedErr(err)
+		return user_errors.SetRecipientIDFailedErr(err)
 	}
 
 	// Call transactions/sync 

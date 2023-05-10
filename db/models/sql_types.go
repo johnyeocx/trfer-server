@@ -64,6 +64,7 @@ type JsonNullString struct {
     sql.NullString
 }
 
+
 func (v *JsonNullString) MarshalJSON() ([]byte, error) {
     if v.Valid {
         return json.Marshal(v.String)

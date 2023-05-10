@@ -87,11 +87,11 @@ func (u *UserDB) SetRecipientID(id int, recipientId string) (error) {
 	return err
 }
 
-func (u *UserDB) SetPublicToken(id int, publicToken string) (error) {
+func (u *UserDB) SetAccessToken(id int, accessToken string) (error) {
 	
 	_, err := u.DB.Exec(
-		`UPDATE "user" SET public_token=$1 WHERE user_id=$2`,
-		publicToken, id,
+		`UPDATE "user" SET access_token=$1, bank_connected='True' WHERE user_id=$2`,
+		accessToken, id,
 	)
 
 	return err

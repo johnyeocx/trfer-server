@@ -31,7 +31,7 @@ func (u *UserDB) GetUserByUsername(username string) (*user_models.User, error) {
 	var user user_models.User
 
 	err := u.DB.QueryRow(`SELECT 
-		user_id, username, email, first_name, last_name, public_token, recipient_id, page_theme
+		user_id, username, email, first_name, last_name, bank_connected, recipient_id, page_theme
 		FROM "user" WHERE username=$1 AND email_verified=TRUE`, 
 	username).Scan(
 		&user.ID,
@@ -39,7 +39,7 @@ func (u *UserDB) GetUserByUsername(username string) (*user_models.User, error) {
 		&user.Email,
 		&user.FirstName,
 		&user.LastName,
-		&user.PublicToken,
+		&user.BankConnected,
 		&user.RecipientID,
 		&user.PageTheme,
 	)
@@ -76,7 +76,7 @@ func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 	var user user_models.User
 	
 	err := u.DB.QueryRow(`SELECT 
-		user_id, username, email, first_name, last_name, public_token, page_theme
+		user_id, username, email, first_name, last_name, bank_connected, page_theme
 		FROM "user" WHERE user_id=$1 AND email_verified=TRUE`, 
 	uId).Scan(
 		&user.ID,
@@ -84,7 +84,7 @@ func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 		&user.Email,
 		&user.FirstName,
 		&user.LastName,
-		&user.PublicToken,
+		&user.BankConnected,
 		&user.PageTheme,
 	)
 
