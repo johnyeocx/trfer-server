@@ -66,38 +66,35 @@ func TransferOpenAmt(sqlDB *sql.DB, plaidCli *plaid.APIClient, username string, 
 }
 
 func UpdatePaymentFromPIEvent(
-	sqlDB *sql.DB, plaidCli *plaid.APIClient, piEvent models.PaymentInitiationEvent) (*models.RequestError) {
+	sqlDB *sql.DB, 
+	plaidCli *plaid.APIClient, 
+	piEvent models.PaymentInitiationEvent,
+) (*models.RequestError) {
 	p := payment_db.PaymentDB{DB: sqlDB}
 
-	// if piEvent.NewPaymentStatus == PaymentStatus.Executed {
-	// 	payment, err := p.GetPayment(piEvent.PlaidPaymentID)
+	payerName := models.JsonNullString{
+		sql.NullString{
+			Valid: false,
+			String: "",
+		},
+	}
 
-	// 	if err != nil {
-	// 		return banking_errors.GetPaymentFailedErr(err)
-	// 	}
-		
-	// 	user, err := u.GetUserByID(payment.UserID)
-	// 	if err != nil {
-	// 		return user_errors.GetUserFailedErr(err)
-	// 	}
-
-	// 	transactions, err := my_plaid.GetUserTransactions(plaidCli, user.PublicToken.String, payment.Created)
-
-	// 	if err != nil {
-	// 		return banking_errors.GetTransactionsFailedErr(err)
-	// 	}
-
-	// 	for _, transaction := range(transactions) {
-	// 		txReferenceNumber := transaction.PaymentMeta.ReferenceNumber
-	// 		if *txReferenceNumber.Get() == payment.Reference {
-	// 			txName.Valid = true
-	// 			txName.String = transaction.Name
-	// 		}
-	// 	}
-	// }
-
+	if (piEvent.NewPaymentStatus == PaymentStatus.Executed) {
+		payment, err := my_plaid.GetPayment(plaidCli, piEvent.PlaidPaymentID)
+		if err != nil {
+			return banking_errors.GetPaymentFailedErr(err)
+		}
 	
-	err := p.UpdatePaymentFromPIEvent(piEvent)
+		refundDetails := payment.RefundDetails
+	
+	
+		if (refundDetails.IsSet() && refundDetails.Get().Name != "") {
+			payerName.Valid = true
+			payerName.String = refundDetails.Get().GetName()
+		}	
+	}
+
+	err := p.UpdatePaymentFromPIEvent(piEvent, payerName)
 	if err != nil {
 		return banking_errors.UpdatePaymentFailedErr(err)
 	}

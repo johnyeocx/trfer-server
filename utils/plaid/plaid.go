@@ -167,18 +167,13 @@ func CreatePaymentLinkToken(
 func GetPayment(
 	plaidCli *plaid.APIClient, 
 	paymentID string,
-) (string, error) {
-	// request := plaid.NewPaymentInitiationPaymentGetRequest(paymentID)
-	// response, _, err := testClient.PlaidApi.PaymentInitiationPaymentGet(ctx).PaymentInitiationPaymentGetRequest(*request).Execute()
-	// paymentID := response.GetPaymentId()
-
-	// response, _, err := plaidCli.PlaidApi.PaymentInitiationPaymentCreate(context.TODO()).PaymentInitiationPaymentCreateRequest(*request).Execute()
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// paymentID := response.GetPaymentId()
-	return paymentID, nil
+) (*plaid.PaymentInitiationPaymentGetResponse, error) {
+	request := plaid.NewPaymentInitiationPaymentGetRequest(paymentID)
+	response, _, err := plaidCli.PlaidApi.PaymentInitiationPaymentGet(context.TODO()).PaymentInitiationPaymentGetRequest(*request).Execute()
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
 }
 
 func GetUserTransactions(
