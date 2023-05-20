@@ -61,7 +61,6 @@ func externalLoginHandler(sqlDB *sql.DB, fbApp *firebase.App) gin.HandlerFunc {
 	}
 }
 
-
 func loginHandler(sqlDB *sql.DB) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		// 1. Get user email and search if exists in db

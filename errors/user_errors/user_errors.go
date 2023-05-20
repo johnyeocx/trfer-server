@@ -13,7 +13,6 @@ const (
 	GetPaymentsFailed 		UserError = "get_payments_failed"
 	NoEmailFound			UserError = "no_email_found"
 
-
 	CreateUserFailed 	UserError = "create_user_failed"
 	InvalidEmail 		UserError = "invalid_email"
 

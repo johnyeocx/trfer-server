@@ -1,12 +1,23 @@
 package user_db
 
-import "github.com/johnyeocx/usual/server2/db/models/user_models"
+import (
+	"database/sql"
+
+	"github.com/johnyeocx/usual/server2/db/models/user_models"
+)
 
 func (u *UserDB) CreateUserFromEmail (
 	email string,
 	username string,
 	verified bool,
+	persActId *string,
 ) (*int, error) {
+
+	persId := sql.NullString{}
+	if persActId != nil {
+		persId.Valid = true
+		persId.String = *persActId
+	}
 
 	_, err := u.DB.Exec(`DELETE from "user" WHERE email=$1 AND email_verified=FALSE`, email)
 	if err != nil {
@@ -20,9 +31,9 @@ func (u *UserDB) CreateUserFromEmail (
 
 	var userId int
 	err = u.DB.QueryRow(`
-		INSERT into "user" (email, username, email_verified) VALUES ($1, $2, $3)
+		INSERT into "user" (email, username, email_verified, pers_account_id) VALUES ($1, $2, $3, $4)
 		RETURNING user_id`,
-		email, username, verified,
+		email, username, verified, persActId,
 	).Scan(&userId)
 
 	if err != nil {
@@ -32,10 +43,13 @@ func (u *UserDB) CreateUserFromEmail (
 	return &userId, nil
 }
 
-func (u *UserDB) SetEmailVerified(email string) (*user_models.User, error) {
+func (u *UserDB) SetPersIdAndEmailverified(persId string, email string) (*user_models.User, error) {
 	var user user_models.User
 	
-	err := u.DB.QueryRow(`UPDATE "user" SET email_verified=TRUE WHERE email=$1 RETURNING user_id`, email).Scan(
+	err := u.DB.QueryRow(`UPDATE "user" SET pers_account_id=$1, email_verified=TRUE WHERE email=$2 RETURNING user_id`, 		
+		persId, 
+		email,
+	).Scan(
 		&user.ID,
 	)
 

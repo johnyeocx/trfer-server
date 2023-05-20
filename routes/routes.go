@@ -9,6 +9,7 @@ import (
 	"github.com/johnyeocx/usual/server2/api/auth"
 	"github.com/johnyeocx/usual/server2/api/banking"
 	"github.com/johnyeocx/usual/server2/api/payment"
+	persona "github.com/johnyeocx/usual/server2/api/pers"
 	"github.com/johnyeocx/usual/server2/api/user"
 	"github.com/plaid/plaid-go/v11/plaid"
 )
@@ -30,5 +31,6 @@ func CreateRoutes(
 		auth.Routes(apiRoute.Group("/auth"), sqlDB, fbApp)
 		banking.Routes(apiRoute.Group("/banking"), sqlDB, plaidCli)
 		payment.Routes(apiRoute.Group("/payment"), sqlDB, plaidCli)
+		persona.Routes(apiRoute.Group("/pers"), sqlDB, plaidCli)
 	}
 }

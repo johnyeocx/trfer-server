@@ -78,7 +78,8 @@ func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 	var user user_models.User
 	
 	err := u.DB.QueryRow(`SELECT 
-		user_id, username, email, first_name, last_name, bank_connected, page_theme
+		user_id, username, email, first_name, last_name, bank_connected, page_theme, 
+		access_token, pers_account_id
 		FROM "user" WHERE user_id=$1 AND email_verified=TRUE`, 
 	uId).Scan(
 		&user.ID,
@@ -88,6 +89,8 @@ func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 		&user.LastName,
 		&user.BankConnected,
 		&user.PageTheme,
+		&user.AccessToken,
+		&user.PersAccountID,
 	)
 
 	if err != nil {

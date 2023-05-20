@@ -7,7 +7,9 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models"
 	"github.com/johnyeocx/usual/server2/db/user_db"
 	"github.com/johnyeocx/usual/server2/errors/auth_errors"
+	"github.com/johnyeocx/usual/server2/errors/pers_errors"
 	"github.com/johnyeocx/usual/server2/errors/user_errors"
+	"github.com/johnyeocx/usual/server2/persona"
 	"github.com/johnyeocx/usual/server2/utils/enums"
 	"github.com/johnyeocx/usual/server2/utils/enums/OtpType"
 	"github.com/johnyeocx/usual/server2/utils/enums/TokenType"
@@ -81,7 +83,6 @@ func verifyEmailLoginOtp(sqlDB *sql.DB, email string, otp string) (map[string]st
 	}, nil
 }
 
-
 func verifyEmailRegisterOtp(sqlDB *sql.DB, email string, otp string) (map[string]string, *models.RequestError){
 
 	// 1. Verify Email
@@ -90,9 +91,15 @@ func verifyEmailRegisterOtp(sqlDB *sql.DB, email string, otp string) (map[string
 		return nil, reqErr
 	}
 
+	// 2. Create pers acct
+	persId, err := persona.CreateAccount(email)
+	if err != nil {
+		return nil, pers_errors.CreateAccountFailedErr(err)
+	}
+
 	// 2. Set User Verified
 	u := user_db.UserDB{DB: sqlDB}
-	user, err := u.SetEmailVerified(email)
+	user, err := u.SetPersIdAndEmailverified(persId, email)
 	if err != nil {
 		return nil, user_errors.SetEmailVerifiedFailedErr(err)
 	}

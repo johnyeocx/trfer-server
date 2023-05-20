@@ -11,7 +11,9 @@ import (
 	"github.com/johnyeocx/usual/server2/errors/auth_errors"
 	"github.com/johnyeocx/usual/server2/errors/banking_errors"
 	gen_errors "github.com/johnyeocx/usual/server2/errors/general_errors"
+	"github.com/johnyeocx/usual/server2/errors/pers_errors"
 	"github.com/johnyeocx/usual/server2/errors/user_errors"
+	"github.com/johnyeocx/usual/server2/persona"
 	"github.com/johnyeocx/usual/server2/utils/enums/OtpType"
 	"github.com/johnyeocx/usual/server2/utils/enums/PaymentStatus"
 	"github.com/johnyeocx/usual/server2/utils/enums/TokenType"
@@ -63,6 +65,14 @@ func getUserData(
 	user, err := u.GetUserByID(uId)
 	if err != nil {
 		return nil, user_errors.GetUserFailedErr(err)
+	}
+
+	if (user.AccessToken.Valid) {
+		user.AccessToken.Valid = false
+		user.AccessToken.String = ""
+		user.AccessTokenCreated = true
+	} else {
+		user.AccessTokenCreated = false
 	}
 
 	return map[string]interface{}{
@@ -128,9 +138,15 @@ func ExternalRegister(
 		return nil, user_errors.EmailTakenErr(errors.New("email already taken"))
 	}
 
+	// 2. Create pers acct
+	persId, err := persona.CreateAccount(email)
+	if err != nil {
+		return nil, pers_errors.CreateAccountFailedErr(err)
+	}
+
 	// step 3: create new entry
 	u := user_db.UserDB{DB: sqlDB}
-	uId, err := u.CreateUserFromEmail(email, username, true)
+	uId, err := u.CreateUserFromEmail(email, username, true, &persId)
 	if err != nil {
 		return nil, user_errors.CreateUserFailedErr(err)
 	}
@@ -178,7 +194,7 @@ func emailRegister(
 
 	// step 3: create new entry
 	u := user_db.UserDB{DB: sqlDB}
-	_, err := u.CreateUserFromEmail(email, username, false)
+	_, err := u.CreateUserFromEmail(email, username, false, nil)
 	if err != nil {
 		return user_errors.CreateUserFailedErr(err)
 	}

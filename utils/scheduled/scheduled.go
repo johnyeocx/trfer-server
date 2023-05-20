@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
-	"github.com/johnyeocx/usual/server2/api/payment"
 	"github.com/johnyeocx/usual/server2/db/payment_db"
 	"github.com/plaid/plaid-go/v11/plaid"
 )
@@ -49,22 +48,22 @@ func PollForTransactions(sqlDB *sql.DB, plaidCli *plaid.APIClient) {
 			endDate = time.Date(created.Year(), created.Month(), created.Day(), 0, 0, 0, 0, time.UTC).AddDate(0, 0, 1)
 			endIndex = i
 			
-
 			// Exec search function on start and end
 			log.Printf("Updating transaction names for user %d, from %v to %v\n", payments[i].UserID, startDate.Format("01/02"), endDate.Format("01/02"))
-			err := payment.UpdatePaymentNames(
-				sqlDB, 
-				plaidCli, 
-				payments[i].UserID, 
-				payments[i].AccessToken.String, 
-				startDate, 
-				endDate,
-				payments[startIndex: endIndex],
-			)
-			if err != nil {
-				log.Println("Failed to update payment names:", err)
-			}
-			fmt.Println()
+			fmt.Println(startIndex, endIndex)
+			// err := payment.UpdatePaymentNames(
+			// 	sqlDB, 
+			// 	plaidCli, 
+			// 	payments[i].UserID, 
+			// 	payments[i].AccessToken.String, 
+			// 	startDate, 
+			// 	endDate,
+			// 	payments[startIndex: endIndex],
+			// )
+			// if err != nil {
+			// 	log.Println("Failed to update payment names:", err)
+			// }
+			// fmt.Println()
 		}		
 	}
 

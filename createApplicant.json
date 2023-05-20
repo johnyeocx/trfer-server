@@ -1,0 +1,36 @@
+{
+  "id" : "646507dd69edf812c35d53d2",
+  "createdAt" : "2023-05-17 16:59:09",
+  "key" : "JJXHRFAJATSFMM",
+  "clientId" : "trfer.me",
+  "inspectionId" : "646507dd69edf812c35d53d3",
+  "externalUserId" : "55547a13-929f-4307-9421-28b4af103ebf",
+  "info" : { },
+  "fixedInfo" : {
+    "firstName" : "Test First Name",
+    "country" : "GBR"
+  },
+  "applicantPlatform" : "API",
+  "requiredIdDocs" : {
+    "docSets" : [ {
+      "idDocSetType" : "IDENTITY",
+      "types" : [ "ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "DRIVERS" ],
+      "subTypes" : [ "FRONT_SIDE", "BACK_SIDE" ]
+    }, {
+      "idDocSetType" : "SELFIE",
+      "types" : [ "SELFIE" ],
+      "videoRequired" : "passiveLiveness"
+    } ]
+  },
+  "review" : {
+    "reviewId" : "fzUbc",
+    "attemptId" : "EFZXW",
+    "attemptCnt" : 0,
+    "levelName" : "basic-kyc-level",
+    "createDate" : "2023-05-17 16:59:09+0000",
+    "reviewStatus" : "init",
+    "priority" : 0
+  },
+  "type" : "individual",
+  "inspectionMetadata" : [ ]
+}
