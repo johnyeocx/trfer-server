@@ -32,8 +32,10 @@ func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}	
+		
+		data := event["data"].(map[string]interface{})
+		attributes := data["attributes"].(map[string]interface{})
 
-		attributes := event["attributes"].(map[string]interface{})
 		webhookType := attributes["name"].(string)
 
 		fmt.Println("Received Pers Webhook: ", webhookType)
