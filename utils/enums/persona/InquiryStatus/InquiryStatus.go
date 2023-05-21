@@ -8,10 +8,12 @@ import (
 const (
 	Created enums.InquiryStatus = "created"
 	Pending enums.InquiryStatus = "pending"
+	Failed enums.InquiryStatus = "failed"
+	NeedsReview enums.InquiryStatus = "needs_review"
+
 	Completed enums.InquiryStatus = "completed"
 	Approved enums.InquiryStatus = "approved"
 	Declined enums.InquiryStatus = "declined"
-	
 )
 
 // func EventStrToPaymentStatus(str string) (enums.PaymentStatus) {

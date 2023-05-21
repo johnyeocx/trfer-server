@@ -38,7 +38,9 @@ func getInquiryAccessTokenHandler(sqlDB *sql.DB) gin.HandlerFunc {
 
 func persInquiryWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
 	return func (c *gin.Context) {
-		const MaxBodyBytes = int64(65536)
+	
+
+		const MaxBodyBytes = int64(200000)
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
 
 		payload, err := io.ReadAll(c.Request.Body)
@@ -54,6 +56,7 @@ func persInquiryWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Han
 		}	
 		
 		data := event["data"].(map[string]interface{})
+	
 		attributes := data["attributes"].(map[string]interface{})
 
 		webhookName := attributes["name"].(string)

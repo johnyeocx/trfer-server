@@ -32,7 +32,9 @@ func GetInquiryAccessToken(sqlDB *sql.DB, uId int) (map[string]interface{}, *mod
 	}
 
 	var sessionToken *string
-	if (inq.InquiryStatus == string(InquiryStatus.Created))  {
+	// if (inq.InquiryStatus == string(InquiryStatus.Created) 
+	// 	|| inq.InquiryStatus == string(InquiryStatus.Pending))  
+	if true {
 		stoken, err := persona.GetInquirySessionToken(inq.PersInquiryID)
 		if err == nil {
 			sessionToken = &stoken
