@@ -12,9 +12,18 @@ type PersDB struct {
 
 func (i *PersDB) InsertInquiry(inquiry personamodels.Inquiry) (error) {
 	
+	startedAt := sql.NullTime{}
+	if (inquiry.StartedAt != nil) {
+		startedAt.Valid = true
+		startedAt.Time = *inquiry.StartedAt
+	}
+
+	iSqlNulls := inquiry.GetSqlNullVals()
+	
 	_, err := i.DB.Exec(`INSERT into inquiry 
 		(pers_inquiry_id, pers_account_id, inquiry_status, 
-			pers_session_id, session_status)
+			created_at, started_at, completed_at, decisioned_at
+		)
 		VALUES ($1, $2, $3, $4, $5) 
 		ON CONFLICT (pers_inquiry_id) DO UPDATE 
 		SET inquiry_status=$3
@@ -23,6 +32,11 @@ func (i *PersDB) InsertInquiry(inquiry personamodels.Inquiry) (error) {
 		inquiry.PersAccountID, 
 		inquiry.PersSessionID, 
 		inquiry.SessionStatus,
+
+		iSqlNulls.CreatedAt,
+		iSqlNulls.StartedAt,
+		iSqlNulls.CompletedAt,
+		iSqlNulls.DecisionedAt,
 	)
 
 	return err

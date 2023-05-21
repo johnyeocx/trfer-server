@@ -7,7 +7,6 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models"
 	personamodels "github.com/johnyeocx/usual/server2/db/models/persona_models"
 	"github.com/johnyeocx/usual/server2/db/pers_db"
-	"github.com/johnyeocx/usual/server2/errors/pers_errors"
 )
 
 
@@ -17,21 +16,35 @@ func DecodeInquiryWebhook(data map[string]interface{}) (*personamodels.Inquiry, 
 	attributes := data["attributes"].(map[string]interface{})
 	status := attributes["status"].(string)
 
-	createdAtStr := attributes["created-at"].(string)
-	_, err := time.Parse(time.RFC3339, createdAtStr)
-	if err != nil {
-		return nil, pers_errors.DecodeInquiryFailedErr(err)
+	i := personamodels.Inquiry{}
+
+	createdAtStr := attributes["created-at"]
+	if (createdAtStr != nil) {
+		createdAt, _ := time.Parse(time.RFC3339, createdAtStr.(string))
+		i.CreatedAt = &createdAt
+	}
+	if (attributes["started-at"] != nil) {
+		startedAt, _ := time.Parse(time.RFC3339, attributes["started-at"].(string))
+		i.StartedAt = &startedAt
+	}
+	if (attributes["completed-at"] != nil) {
+		completedAt, _ := time.Parse(time.RFC3339, attributes["completed-at"].(string))
+		i.CompletedAt = &completedAt
+	}
+	if (attributes["decisioned-at"] != nil) {
+		decisionedAt, _ := time.Parse(time.RFC3339, attributes["decisioned-at"].(string))
+		i.DecisionedAt = &decisionedAt
 	}
 
 	relationships := data["relationships"].(map[string]interface{})
 	account := relationships["account"].(map[string]interface{})["data"].(map[string]interface{})
 	acctId := account["id"].(string)
+
+	i.PersInquiryID = inqId
+	i.InquiryStatus = status
+	i.PersAccountID = acctId
 	
-	return &personamodels.Inquiry{
-		PersInquiryID: inqId,
-		InquiryStatus: status,
-		PersAccountID: acctId,
-	}, nil
+	return &i, nil
 }
 
 func UpdateInquiry(sqlDB *sql.DB, inquiry personamodels.Inquiry) {
