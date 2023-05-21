@@ -55,13 +55,16 @@ func persInquiryWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Han
 					return
 				}
 			case "inquiry-session":
-		// 		piEvent := decodePaymentInitiationWebhook(event)
-		// 		fmt.Println("PIEvent:", piEvent)
-		// 		reqErr := UpdatePaymentFromPIEvent(sqlDB, plaidCli, piEvent)
-		// 		if reqErr != nil {
-		// 			reqErr.LogAndReturn(c)
-		// 			return
-		// 		}
+				inquiry, reqErr := DecodeInquirySessionWebhook(attrData)
+				if reqErr != nil {
+					reqErr.LogAndReturn(c)
+					return
+				}
+				reqErr = UpdateInquirySession(sqlDB, *inquiry)
+				if reqErr != nil {
+					reqErr.LogAndReturn(c)
+					return
+				}
 		}
 
 		c.JSON(200, nil)

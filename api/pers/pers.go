@@ -48,7 +48,35 @@ func DecodeInquiryWebhook(data map[string]interface{}) (*personamodels.Inquiry, 
 	return &i, nil
 }
 
+func DecodeInquirySessionWebhook(data map[string]interface{}) (*personamodels.Inquiry, *models.RequestError){
+	sessionId := data["id"].(string)
+
+	attributes := data["attributes"].(map[string]interface{})
+	sessionStatus := attributes["status"].(string)
+
+	relationships := data["relationships"].(map[string]interface{})
+	account := relationships["inquiry"].(map[string]interface{})["data"].(map[string]interface{})
+	inqId := account["id"].(string)
+
+	i := personamodels.Inquiry{}
+	i.PersInquiryID = inqId
+	i.PersSessionID = sessionId
+	i.SessionStatus = sessionStatus
+	
+	return &i, nil
+}
+
 func UpdateInquiry(sqlDB *sql.DB, inquiry personamodels.Inquiry) (*models.RequestError) {
+	p := pers_db.PersDB{DB: sqlDB}
+	err := p.InsertInquiry(inquiry)
+	if err != nil {
+		return pers_errors.UpdateInquiryFailedErr(err)
+	}
+
+	return nil
+}
+
+func UpdateInquirySession(sqlDB *sql.DB, inquiry personamodels.Inquiry) (*models.RequestError) {
 	p := pers_db.PersDB{DB: sqlDB}
 	err := p.InsertInquiry(inquiry)
 	if err != nil {
