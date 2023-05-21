@@ -24,14 +24,13 @@ func (i *PersDB) InsertInquiry(inquiry personamodels.Inquiry) (error) {
 		(pers_inquiry_id, pers_account_id, inquiry_status, 
 			created_at, started_at, completed_at, decisioned_at
 		)
-		VALUES ($1, $2, $3, $4, $5) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7) 
 		ON CONFLICT (pers_inquiry_id) DO UPDATE 
 		SET inquiry_status=$3
 		` , 
 		inquiry.PersInquiryID, 
 		inquiry.PersAccountID, 
-		inquiry.PersSessionID, 
-		inquiry.SessionStatus,
+		inquiry.InquiryStatus, 
 
 		iSqlNulls.CreatedAt,
 		iSqlNulls.StartedAt,
