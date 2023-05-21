@@ -8,7 +8,9 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models"
 	personamodels "github.com/johnyeocx/usual/server2/db/models/persona_models"
 	"github.com/johnyeocx/usual/server2/db/pers_db"
+	"github.com/johnyeocx/usual/server2/db/user_db"
 	"github.com/johnyeocx/usual/server2/errors/pers_errors"
+	"github.com/johnyeocx/usual/server2/errors/user_errors"
 	"github.com/johnyeocx/usual/server2/persona"
 	"github.com/johnyeocx/usual/server2/utils/enums/persona/InquiryStatus"
 )
@@ -99,6 +101,14 @@ func UpdateInquiry(sqlDB *sql.DB, inquiry personamodels.Inquiry) (*models.Reques
 	err := p.InsertInquiry(inquiry)
 	if err != nil {
 		return pers_errors.UpdateInquiryFailedErr(err)
+	}
+
+	if inquiry.InquiryStatus == string(InquiryStatus.Approved) {
+		u := user_db.UserDB{DB: sqlDB}
+		err := u.SetPersApproved(inquiry.PersAccountID, true)
+		if err != nil {
+			return user_errors.SetPersApprovedFailedErr(err)
+		}
 	}
 
 	return nil

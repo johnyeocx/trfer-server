@@ -18,6 +18,7 @@ type User struct {
 	SignInProvider		enums.SignInProvider	`json:"signin_provider"`
 	PageTheme 			string					`json:"page_theme"`
 	PersAccountID		*string					`json:"pers_account_id"`
+	PersApproved		bool					`json:"pers_approved"`
 }
 
 func (u* User) FullName() string{

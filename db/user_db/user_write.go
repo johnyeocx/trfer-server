@@ -80,7 +80,6 @@ func (u *UserDB) SetUsername(id int, username string) (error) {
 	return err
 }
 
-
 func (u *UserDB) SetPageTheme(id int, pageTheme string) (error) {
 	
 	_, err := u.DB.Exec(
@@ -106,6 +105,16 @@ func (u *UserDB) SetAccessToken(id int, accessToken string) (error) {
 	_, err := u.DB.Exec(
 		`UPDATE "user" SET access_token=$1, bank_connected='True' WHERE user_id=$2`,
 		accessToken, id,
+	)
+
+	return err
+}
+
+func (u *UserDB) SetPersApproved(acctId string, persApproved bool) (error) {
+	
+	_, err := u.DB.Exec(
+		`UPDATE "user" SET pers_approved=$1 WHERE pers_account_id=$2`,
+		persApproved, acctId,
 	)
 
 	return err

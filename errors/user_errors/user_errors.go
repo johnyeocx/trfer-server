@@ -26,6 +26,7 @@ const (
 	SetRecipientIDFailed 		UserError = "set_recipient_id_failed"
 	SetPageThemeFailed 		UserError = "set_page_theme_failed"
 	SetUsernameFailed 		UserError = "set_username_failed"
+	SetPersApprovedFailed 		UserError = "set_pers_approved_failed"
 )
 
 func GetUserFailedErr(err error) *models.RequestError {
@@ -147,6 +148,14 @@ func SetUsernameFailedErr(err error) *models.RequestError {
 		Err: err,
 		StatusCode: http.StatusBadGateway,
 		Code: string(SetUsernameFailed),
+	}
+}
+
+func SetPersApprovedFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(SetPersApprovedFailed),
 	}
 }
 
