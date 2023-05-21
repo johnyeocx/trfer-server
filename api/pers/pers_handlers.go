@@ -45,8 +45,11 @@ func persInquiryWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Han
 		switch webhookType {
 			case "inquiry": 
 				inquiry, reqErr := DecodeInquiryWebhook(attrData)
-				fmt.Println("Inquiry: ", inquiry)
-				
+				if reqErr != nil {
+					reqErr.LogAndReturn(c)
+					return
+				}
+				reqErr = UpdateInquiry(sqlDB, *inquiry)
 				if reqErr != nil {
 					reqErr.LogAndReturn(c)
 					return

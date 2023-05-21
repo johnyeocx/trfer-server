@@ -7,6 +7,7 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models"
 	personamodels "github.com/johnyeocx/usual/server2/db/models/persona_models"
 	"github.com/johnyeocx/usual/server2/db/pers_db"
+	"github.com/johnyeocx/usual/server2/errors/pers_errors"
 )
 
 
@@ -47,7 +48,12 @@ func DecodeInquiryWebhook(data map[string]interface{}) (*personamodels.Inquiry, 
 	return &i, nil
 }
 
-func UpdateInquiry(sqlDB *sql.DB, inquiry personamodels.Inquiry) {
+func UpdateInquiry(sqlDB *sql.DB, inquiry personamodels.Inquiry) (*models.RequestError) {
 	p := pers_db.PersDB{DB: sqlDB}
-	p.InsertInquiry(inquiry)
+	err := p.InsertInquiry(inquiry)
+	if err != nil {
+		return pers_errors.UpdateInquiryFailedErr(err)
+	}
+
+	return nil
 }
