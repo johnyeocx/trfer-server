@@ -94,8 +94,8 @@ func DecodeInquirySessionWebhook(data map[string]interface{}) (*personamodels.In
 
 	i := personamodels.Inquiry{}
 	i.PersInquiryID = inqId
-	i.PersSessionID = sessionId
-	i.SessionStatus = sessionStatus
+	i.PersSessionID = &sessionId
+	i.SessionStatus = &sessionStatus
 	fmt.Println("Inquiry Session: ", i)
 	
 	return &i, nil

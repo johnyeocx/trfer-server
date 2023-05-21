@@ -10,8 +10,8 @@ type Inquiry struct {
 	PersInquiryID string `json:"pers_inquiry_id"`
 	PersAccountID string `json:"pers_account_id"`
 	InquiryStatus string `json:"inquiry_status"`
-	PersSessionID string `json:"pers_session_id"`
-	SessionStatus string `json:"session_status"`
+	PersSessionID *string `json:"pers_session_id"`
+	SessionStatus *string `json:"session_status"`
 
 	CreatedAt 			*time.Time `json:"created_at"`
 	StartedAt 			*time.Time `json:"started_at"`
@@ -29,6 +29,7 @@ type InquirySqlNulls struct {
 	CompletedAt 	sql.NullTime `json:"completed_at"`
 	DecisionedAt 	sql.NullTime `json:"decisioned_at"`	
 }
+
 func (i *Inquiry) GetSqlNullVals() (InquirySqlNulls){
 	iSql := InquirySqlNulls{}
 	if (i.CreatedAt != nil) {
