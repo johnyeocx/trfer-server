@@ -46,9 +46,9 @@ func (i *PersDB) UpdateInquirySession(inquiry personamodels.Inquiry) (error) {
 	_, err := i.DB.Exec(`UPDATE inquiry SET pers_session_id=$1, session_status=$2
 		WHERE pers_inquiry_id=$3
 		` , 
-		inquiry.PersInquiryID, 
 		inquiry.PersSessionID, 
 		inquiry.SessionStatus,
+		inquiry.PersInquiryID, 
 	)
 
 	return err

@@ -3,6 +3,7 @@ package persona
 import (
 	"database/sql"
 	"time"
+	"fmt"
 
 	"github.com/johnyeocx/usual/server2/db/models"
 	personamodels "github.com/johnyeocx/usual/server2/db/models/persona_models"
@@ -62,6 +63,7 @@ func DecodeInquirySessionWebhook(data map[string]interface{}) (*personamodels.In
 	i.PersInquiryID = inqId
 	i.PersSessionID = sessionId
 	i.SessionStatus = sessionStatus
+	fmt.Println("Inquiry Session: ", i)
 	
 	return &i, nil
 }
@@ -78,7 +80,7 @@ func UpdateInquiry(sqlDB *sql.DB, inquiry personamodels.Inquiry) (*models.Reques
 
 func UpdateInquirySession(sqlDB *sql.DB, inquiry personamodels.Inquiry) (*models.RequestError) {
 	p := pers_db.PersDB{DB: sqlDB}
-	err := p.InsertInquiry(inquiry)
+	err := p.UpdateInquirySession(inquiry)
 	if err != nil {
 		return pers_errors.UpdateInquiryFailedErr(err)
 	}
