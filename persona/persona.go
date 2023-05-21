@@ -14,7 +14,11 @@ const URL = "https://withpersona.com/api/v1/"
 func CreateAccount(email string) (string, error) {
 
 	reqBody := map[string]interface{}{
-		"email-address": email,
+		"data": map[string]interface{} {
+			"attributes": map[string]interface{}{
+				"email-address": email,
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(reqBody)
@@ -87,4 +91,4 @@ func _makePersonaRequest(path, method, contentType string, body []byte) ([]byte,
 	}
 
 	return b, nil
-}
+}	

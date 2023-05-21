@@ -9,6 +9,7 @@ import (
 type PersError string
 const (
 	CreateAccountFailed PersError = "create_pers_account_failed"
+	DecodeInquiryFailed PersError = "decode_inquiry_failed"
 )
 
 func CreateAccountFailedErr(err error) *models.RequestError {
@@ -16,5 +17,13 @@ func CreateAccountFailedErr(err error) *models.RequestError {
 		Err: err,
 		StatusCode: http.StatusBadGateway,
 		Code: string(CreateAccountFailed),
+	}
+}
+
+func DecodeInquiryFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(DecodeInquiryFailed),
 	}
 }

@@ -13,10 +13,10 @@ import (
 
 
 func Routes(persRouter *gin.RouterGroup, sqlDB *sql.DB, plaidCli *plaid.APIClient) {
-	persRouter.POST("/webhook", transferWebhookHandler(sqlDB, plaidCli))
+	persRouter.POST("/inquiry/webhook", persInquiryWebhookHandler(sqlDB, plaidCli))
 }
 
-func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
+func persInquiryWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		const MaxBodyBytes = int64(65536)
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
@@ -36,11 +36,22 @@ func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 		data := event["data"].(map[string]interface{})
 		attributes := data["attributes"].(map[string]interface{})
 
-		webhookType := attributes["name"].(string)
+		webhookName := attributes["name"].(string)
+		fmt.Println("Received Pers Webhook: ", webhookName)
 
-		fmt.Println("Received Pers Webhook: ", webhookType)
-		// switch webhookType {
-		// 	case "PAYMENT_INITIATION": 
+		attrData := attributes["payload"].(map[string]interface{})["data"].(map[string]interface{})
+
+		webhookType := attrData["type"]
+		switch webhookType {
+			case "inquiry": 
+				inquiry, reqErr := DecodeInquiryWebhook(attrData)
+				fmt.Println("Inquiry: ", inquiry)
+				
+				if reqErr != nil {
+					reqErr.LogAndReturn(c)
+					return
+				}
+			case "inquiry-session":
 		// 		piEvent := decodePaymentInitiationWebhook(event)
 		// 		fmt.Println("PIEvent:", piEvent)
 		// 		reqErr := UpdatePaymentFromPIEvent(sqlDB, plaidCli, piEvent)
@@ -48,7 +59,7 @@ func transferWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handle
 		// 			reqErr.LogAndReturn(c)
 		// 			return
 		// 		}
-		// }
+		}
 
 		c.JSON(200, nil)
 	}
