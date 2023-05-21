@@ -8,12 +8,32 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/johnyeocx/usual/server2/utils/middleware"
 	"github.com/plaid/plaid-go/v11/plaid"
 )
 
 
 func Routes(persRouter *gin.RouterGroup, sqlDB *sql.DB, plaidCli *plaid.APIClient) {
+	persRouter.GET("/session_token", getInquiryAccessTokenHandler(sqlDB))
 	persRouter.POST("/inquiry/webhook", persInquiryWebhookHandler(sqlDB, plaidCli))
+}
+
+func getInquiryAccessTokenHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+
+		// 2. Set Name
+		res, reqErr := GetInquiryAccessToken(sqlDB, uId)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
 }
 
 func persInquiryWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {

@@ -10,6 +10,31 @@ type PersDB struct {
 	DB	*sql.DB
 }
 
+func (i *PersDB) GetUserLatestInquiry(uId int) (*personamodels.Inquiry, error) {
+	
+	query := `
+		SELECT pers_inquiry_id, i.pers_account_id, pers_session_id, inquiry_status, session_status
+		from "user" as u JOIN inquiry as i
+		on u.pers_account_id=i.pers_account_id
+		WHERE u.user_id=$1
+		ORDER BY created_at DESC LIMIT 1
+	`
+	
+	inq := personamodels.Inquiry{}
+	err := i.DB.QueryRow(query, uId).Scan(
+		&inq.PersInquiryID,
+		&inq.PersAccountID,
+		&inq.PersSessionID,
+		&inq.InquiryStatus,
+		&inq.SessionStatus,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &inq, err
+}
+
 func (i *PersDB) InsertInquiry(inquiry personamodels.Inquiry) (error) {
 	
 	startedAt := sql.NullTime{}

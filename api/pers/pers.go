@@ -2,15 +2,41 @@ package persona
 
 import (
 	"database/sql"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/johnyeocx/usual/server2/db/models"
 	personamodels "github.com/johnyeocx/usual/server2/db/models/persona_models"
 	"github.com/johnyeocx/usual/server2/db/pers_db"
 	"github.com/johnyeocx/usual/server2/errors/pers_errors"
+	"github.com/johnyeocx/usual/server2/persona"
+	"github.com/johnyeocx/usual/server2/utils/enums/persona/InquiryStatus"
 )
 
+func GetInquiryAccessToken(sqlDB *sql.DB, uId int) (map[string]interface{}, *models.RequestError){
+	// Get latest inquiry
+	p := pers_db.PersDB{DB: sqlDB}
+	inq, err := p.GetUserLatestInquiry(uId)
+	if err != nil {
+		return nil, pers_errors.GetUserInquiryFailedErr(err)
+	}
+
+
+	var sessionToken *string
+	if (inq.InquiryStatus == string(InquiryStatus.Created))  {
+		fmt.Println("Here")
+		stoken, err := persona.GetInquirySessionToken(inq.PersInquiryID)
+		fmt.Println("Stoken:", stoken)
+		if err == nil {
+			sessionToken = &stoken
+		}
+	}
+
+	return map[string]interface{}{
+		"session_token": sessionToken,
+		"inquiry": inq,
+	}, nil
+}
 
 func DecodeInquiryWebhook(data map[string]interface{}) (*personamodels.Inquiry, *models.RequestError){
 	inqId := data["id"].(string)

@@ -3,6 +3,7 @@ package persona
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -64,6 +65,34 @@ func GetAccount(accountId string) (error) {
 	attributes := data["attributes"].(map[string]interface{})
 	fmt.Println(attributes)
 	return nil
+}
+
+func GetInquirySessionToken(inquiryId string) (string, error) {
+	b, err := _makePersonaRequest(
+		"inquiries/" + inquiryId + "/resume", 
+		"POST", 
+		"application/json", 
+		nil,
+	)
+	
+	if err != nil {
+		return "", err
+	}
+
+
+	resBody := map[string]interface{}{}
+	if err := json.Unmarshal(b, &resBody); err != nil {
+		return "", err
+	}
+
+	fmt.Println("Res body:", resBody["errors"])
+	if (resBody["errors"] != nil) {
+		return "", errors.New("failed to get session token. Restart")
+	}
+	
+	meta := resBody["meta"].(map[string]interface{})
+	sessionToken := meta["session-token"].(string)
+	return sessionToken, nil
 }
 
 func _makePersonaRequest(path, method, contentType string, body []byte) ([]byte, error) {

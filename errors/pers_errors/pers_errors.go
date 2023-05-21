@@ -11,6 +11,8 @@ const (
 	CreateAccountFailed PersError = "create_pers_account_failed"
 	DecodeInquiryFailed PersError = "decode_inquiry_failed"
 	UpdateInquiryFailed PersError = "update_inquiry_failed"
+
+	GetUserInquiryFailed PersError = "get_user_inquiry_failed"
 )
 
 func CreateAccountFailedErr(err error) *models.RequestError {
@@ -35,5 +37,14 @@ func UpdateInquiryFailedErr(err error) *models.RequestError {
 		Err: err,
 		StatusCode: http.StatusBadGateway,
 		Code: string(UpdateInquiryFailed),
+	}
+}
+
+
+func GetUserInquiryFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(GetUserInquiryFailed),
 	}
 }
