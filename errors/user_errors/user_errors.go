@@ -21,7 +21,9 @@ const (
 	SendEmailFailed 		UserError = "send_email_failed"
 
 	SetEmailVerifiedFailed 		UserError = "set_email_verified_failed"
+	SetAccountNameFailed 		UserError = "set_account_name_failed"
 	SetNameFailed 		UserError = "set_name_failed"
+	SetAddressFailed 		UserError = "set_address_failed"
 	SetAccessTokenFailed 		UserError = "set_access_token_failed"
 	SetRecipientIDFailed 		UserError = "set_recipient_id_failed"
 	SetPageThemeFailed 		UserError = "set_page_theme_failed"
@@ -111,11 +113,27 @@ func SetEmailVerifiedFailedErr(err error) *models.RequestError {
 	}
 }
 
+func SetAccountNameFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(SetAccountNameFailed),
+	}
+}
+
 func SetNameFailedErr(err error) *models.RequestError {
 	return &models.RequestError{
 		Err: err,
 		StatusCode: http.StatusBadGateway,
 		Code: string(SetNameFailed),
+	}
+}
+
+func SetAddressFailedErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(SetAddressFailed),
 	}
 }
 

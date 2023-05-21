@@ -19,7 +19,10 @@ const (
 	UpdatePaymentFailed BankingError = "update_payment_failed"
 	GetPaymentFailed BankingError = "get_payment_failed"
 	GetTransactionsFailed BankingError = "get_transactions_failed"
-	AlreadyInitialisedBanking BankingError = "already_initialised_banking"
+
+	AlreadySetAccessToken BankingError = "already_set_access_token"
+	NoAccessToken BankingError = "no_access_token"
+	AlreadyCreatedRecipientID BankingError = "already_created_recipient_id"
 )
 
 func CreateAuthLinkTokenFailedErr(err error) *models.RequestError {
@@ -103,11 +106,27 @@ func UpdatePaymentFailedErr(err error) *models.RequestError {
 	}
 }
 
-func AlreadyInitialisedBankingErr(err error) *models.RequestError {
+func AlreadySetAccessTokenErr(err error) *models.RequestError {
 	return &models.RequestError{
 		Err: err,
 		StatusCode: http.StatusBadGateway,
-		Code: string(AlreadyInitialisedBanking),
+		Code: string(AlreadySetAccessToken),
+	}
+}
+
+func NoAccessTokenErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(AlreadySetAccessToken),
+	}
+}
+
+func AlreadyCreatedRecipientIDErr(err error) *models.RequestError {
+	return &models.RequestError{
+		Err: err,
+		StatusCode: http.StatusBadGateway,
+		Code: string(AlreadyCreatedRecipientID),
 	}
 }
 

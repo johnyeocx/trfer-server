@@ -19,16 +19,21 @@ func GetInquiryAccessToken(sqlDB *sql.DB, uId int) (map[string]interface{}, *mod
 	// Get latest inquiry
 	p := pers_db.PersDB{DB: sqlDB}
 	inq, err := p.GetUserLatestInquiry(uId)
+
+	if err == sql.ErrNoRows {
+		return map[string]interface{}{
+			"session_token": nil,
+			"inquiry": nil,
+		}, nil
+	}
+
 	if err != nil {
 		return nil, pers_errors.GetUserInquiryFailedErr(err)
 	}
 
-
 	var sessionToken *string
 	if (inq.InquiryStatus == string(InquiryStatus.Created))  {
-		fmt.Println("Here")
 		stoken, err := persona.GetInquirySessionToken(inq.PersInquiryID)
-		fmt.Println("Stoken:", stoken)
 		if err == nil {
 			sessionToken = &stoken
 		}

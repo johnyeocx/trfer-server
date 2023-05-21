@@ -60,6 +60,16 @@ func (u *UserDB) SetPersIdAndEmailverified(persId string, email string) (*user_m
 	return &user, nil
 }
 
+func (u *UserDB) SetAccountName(id int, accountName string) (error) {
+	
+	_, err := u.DB.Exec(
+		`UPDATE "user" SET account_name=$1 WHERE user_id=$2`,
+		accountName, id,
+	)
+
+	return err
+}
+
 func (u *UserDB) SetName(id int, firstName string, lastName string) (error) {
 	
 	_, err := u.DB.Exec(
@@ -103,7 +113,7 @@ func (u *UserDB) SetRecipientID(id int, recipientId string) (error) {
 func (u *UserDB) SetAccessToken(id int, accessToken string) (error) {
 	
 	_, err := u.DB.Exec(
-		`UPDATE "user" SET access_token=$1, bank_connected='True' WHERE user_id=$2`,
+		`UPDATE "user" SET access_token=$1 WHERE user_id=$2`,
 		accessToken, id,
 	)
 
@@ -115,6 +125,20 @@ func (u *UserDB) SetPersApproved(acctId string, persApproved bool) (error) {
 	_, err := u.DB.Exec(
 		`UPDATE "user" SET pers_approved=$1 WHERE pers_account_id=$2`,
 		persApproved, acctId,
+	)
+
+	return err
+}
+
+func (u *UserDB) SetAddress(address user_models.Address, uId int) (error) {
+	
+	_, err := u.DB.Exec(
+		`UPDATE "user" SET line1=$1, line2=$2, city=$3, postal_code=$4 WHERE user_id=$5`,
+		address.Line1,
+		address.Line2,
+		address.City,
+		address.PostalCode,
+		uId,
 	)
 
 	return err

@@ -76,10 +76,12 @@ func (u *UserDB) GetUserByEmail(email string) (*user_models.User, error) {
 
 func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 	var user user_models.User
-	
+	user.Address = &user_models.Address{}
+
 	err := u.DB.QueryRow(`SELECT 
 		user_id, username, email, first_name, last_name, bank_connected, page_theme, 
-		access_token, pers_account_id, pers_approved
+		access_token, pers_account_id, pers_approved, account_name,
+		line1, line2, postal_code, city, country_code
 		FROM "user" WHERE user_id=$1 AND email_verified=TRUE`, 
 	uId).Scan(
 		&user.ID,
@@ -92,6 +94,13 @@ func (u *UserDB) GetUserByID(uId int) (*user_models.User, error) {
 		&user.AccessToken,
 		&user.PersAccountID,
 		&user.PersApproved,
+		&user.AccountName,
+
+		&user.Address.Line1,
+		&user.Address.Line2,
+		&user.Address.PostalCode, 
+		&user.Address.City,
+		&user.Address.CountryCode,
 	)
 
 	if err != nil {
@@ -117,6 +126,7 @@ func (u *UserDB) GetLastPaymentID(uId int) (int, error) {
 
 	return lastPaymentId, nil
 }
+
 
 func (u *UserDB) GetUserPaymentsByStatus(
 	uId int, 

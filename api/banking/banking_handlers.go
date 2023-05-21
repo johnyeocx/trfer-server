@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/johnyeocx/usual/server2/errors/banking_errors"
+	"github.com/johnyeocx/usual/server2/utils/helpers"
 	"github.com/johnyeocx/usual/server2/utils/middleware"
 	my_plaid "github.com/johnyeocx/usual/server2/utils/plaid"
 	"github.com/plaid/plaid-go/v11/plaid"
@@ -16,7 +18,12 @@ import (
 
 func Routes(bankingRouter *gin.RouterGroup, sqlDB *sql.DB, plaidCli *plaid.APIClient) {
 	bankingRouter.GET("/get_auth_link_token", getAuthLinkTokenHandler(sqlDB, plaidCli))
+
+	bankingRouter.POST("/create_access_token", createUserAccessTokenHandler(sqlDB, plaidCli))
+	bankingRouter.POST("/create_recipient_id", createRecipientIDHandler(sqlDB, plaidCli))
 	bankingRouter.POST("/webhook", bankingWebhookHandler(sqlDB, plaidCli))
+	
+
 }
 
 func getAuthLinkTokenHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
@@ -40,6 +47,52 @@ func getAuthLinkTokenHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.Handl
 	}
 }
 
+func createUserAccessTokenHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+		
+		// 1. Get user email and search if exists in db
+		reqBody := struct {
+			PublicToken  	 string `json:"public_token"`
+		}{}
+		
+		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
+			return
+		}
+
+		// 2. Set Name
+		reqErr := setUserAccessToken(sqlDB, plaidCli, uId, reqBody.PublicToken)
+		time.Sleep(time.Second * 5)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
+func createRecipientIDHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+
+		// 2. Set Name
+		reqErr := createRecipientID(sqlDB, plaidCli, uId)
+
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
 
 func bankingWebhookHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
 	return func (c *gin.Context) {

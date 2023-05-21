@@ -9,7 +9,6 @@ import (
 	"github.com/johnyeocx/usual/server2/db/models/user_models"
 	"github.com/johnyeocx/usual/server2/db/user_db"
 	"github.com/johnyeocx/usual/server2/errors/auth_errors"
-	"github.com/johnyeocx/usual/server2/errors/banking_errors"
 	gen_errors "github.com/johnyeocx/usual/server2/errors/general_errors"
 	"github.com/johnyeocx/usual/server2/errors/pers_errors"
 	"github.com/johnyeocx/usual/server2/errors/user_errors"
@@ -18,9 +17,7 @@ import (
 	"github.com/johnyeocx/usual/server2/utils/enums/PaymentStatus"
 	"github.com/johnyeocx/usual/server2/utils/enums/TokenType"
 	"github.com/johnyeocx/usual/server2/utils/media"
-	my_plaid "github.com/johnyeocx/usual/server2/utils/plaid"
 	"github.com/johnyeocx/usual/server2/utils/secure"
-	"github.com/plaid/plaid-go/v11/plaid"
 )
 
 func CheckUsernameTaken(sqlDB *sql.DB, username string) (bool, *models.RequestError) {
@@ -73,6 +70,18 @@ func getUserData(
 		user.AccessTokenCreated = true
 	} else {
 		user.AccessTokenCreated = false
+	}
+	
+	if (user.RecipientID.Valid) {
+		user.RecipientID.Valid = false
+		user.RecipientID.String = ""
+		user.RecipientIDCreated = true
+	} else {
+		user.RecipientIDCreated = false
+	}
+
+	if (!user.Address.Line1.Valid) {
+		user.Address = nil
 	}
 
 	return map[string]interface{}{
@@ -209,6 +218,26 @@ func emailRegister(
 	return nil
 }
 
+func setAccountName(
+	sqlDB *sql.DB, 
+	uId int,
+	accountName string, 
+) (*models.RequestError) {
+	if (accountName == "") {
+		return gen_errors.InvalidRequestParamErr(errors.New("empty string passed"))
+	}
+
+	u := user_db.UserDB{DB: sqlDB}
+	
+	err := u.SetAccountName(uId, accountName)
+	
+	if err != nil {
+		return user_errors.SetAccountNameFailedErr(err)
+	}
+
+	return nil
+}
+
 func setName(
 	sqlDB *sql.DB, 
 	uId int,
@@ -229,6 +258,27 @@ func setName(
 
 	return nil
 }
+
+func setAddress(
+	sqlDB *sql.DB, 
+	uId int,
+	address user_models.Address, 
+) (*models.RequestError) {
+	if (address.Line1.String == "" || address.City.String == "" || address.PostalCode.String == "") {
+		return gen_errors.InvalidRequestParamErr(errors.New("invalid fields"))
+	}
+
+	u := user_db.UserDB{DB: sqlDB}
+	
+	err := u.SetAddress(address, uId)
+	
+	if err != nil {
+		return user_errors.SetAddressFailedErr(err)
+	}
+
+	return nil
+}
+
 
 func setUsername(
 	sqlDB *sql.DB, 
@@ -272,62 +322,6 @@ func setPageTheme(
 	if err != nil {
 		return user_errors.SetPageThemeFailedErr(err)
 	}
-
-	return nil
-}
-
-func initialiseBanking(
-	sqlDB *sql.DB,
-	plaidCli *plaid.APIClient,
-	uId int,
-	publicToken string,
-) (*models.RequestError) {
-
-	u := user_db.UserDB{DB: sqlDB}
-
-	user, err := u.GetUserByID(uId)
-	if err != nil {
-		return user_errors.GetUserFailedErr(err)
-	}
-
-	if (user.BankConnected) {
-		return banking_errors.AlreadyInitialisedBankingErr(err)
-	}
-
-	// 1. Get access token
-	accessToken, err := my_plaid.GetAuthAccessToken(plaidCli, publicToken)
-	// fmt.Println("Access token :", accessToken)
-	if err != nil {
-		return banking_errors.GetAccessTokenFailedErr(err)
-	}
-
-	err = u.SetAccessToken(uId, accessToken)
-	if err != nil {
-		return user_errors.SetAccessTokenTokenFailedErr(err)
-	}
-
-	// 2. Get account bank details
-	bacs, err := my_plaid.GetBACNumbers(plaidCli, accessToken)
-	// fmt.Println("Bacs sort code:", bacs.SortCode)
-	if err != nil {
-		return banking_errors.GetBACSFailedErr(err)
-	}
-	
-	recipientID, err := my_plaid.CreatePaymentRecipient(plaidCli, user.FullName(), bacs.Account, bacs.SortCode)
-	// fmt.Println("Recipient ID:", recipientID)
-	if err != nil {
-		return banking_errors.CreatePaymentRecipientFailedErr(err)
-	}
-
-	// 1. Set public token
-	err = u.SetRecipientID(uId, recipientID)
-	// fmt.Println("Successfuly set public token")
-	if err != nil {
-		return user_errors.SetRecipientIDFailedErr(err)
-	}
-
-	// Call transactions/sync 
-	go my_plaid.SyncTransactions(plaidCli, accessToken, nil)
 
 	return nil
 }

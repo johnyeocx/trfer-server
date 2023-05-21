@@ -10,6 +10,7 @@ import (
 	firebase "firebase.google.com/go"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
+	"github.com/johnyeocx/usual/server2/db/models/user_models"
 	gen_errors "github.com/johnyeocx/usual/server2/errors/general_errors"
 	"github.com/johnyeocx/usual/server2/errors/util_errors"
 	"github.com/johnyeocx/usual/server2/utils/cloud"
@@ -21,11 +22,11 @@ import (
 func Routes(userRouter *gin.RouterGroup, sqlDB *sql.DB, s3Cli *s3.Client, plaidCli *plaid.APIClient, fbApp *firebase.App) {
 	userRouter.POST("/external_register", externalRegisterHandler(sqlDB, fbApp))
 	userRouter.POST("/email_register", emailRegisterHandler(sqlDB))
-	userRouter.POST("/name_and_photo", setNameAndPhotoHandler(sqlDB, s3Cli))
-	userRouter.POST("/initialise_banking", initialiseBankingHandler(sqlDB, plaidCli))
+	userRouter.POST("/account_details", setAccountDetailsHandler(sqlDB, s3Cli))
 
 	userRouter.PATCH("/profile_image", setProfileImgHandler(sqlDB, s3Cli))
 	userRouter.PATCH("/name", setNameHandler(sqlDB))
+	userRouter.PATCH("/address", setAddressHandler(sqlDB))
 	userRouter.PATCH("/username", setUsernameHandler(sqlDB))
 	userRouter.PATCH("/page_theme", setPageThemeHandler(sqlDB))
 
@@ -95,7 +96,7 @@ func emailRegisterHandler(sqlDB *sql.DB) gin.HandlerFunc {
 	}
 }
 
-func setNameAndPhotoHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
+func setAccountDetailsHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		uId, err := middleware.AuthenticateUser(c, sqlDB)
@@ -105,8 +106,7 @@ func setNameAndPhotoHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
 		
 		// 1. Get user email and search if exists in db
 		reqBody := struct {
-			FirstName  	 string `json:"first_name"`
-			LastName  		 string `json:"last_name"`
+			AccountName  	 string `json:"account_name"`
 		}{}
 		
 		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
@@ -114,7 +114,7 @@ func setNameAndPhotoHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
 		}
 
 		// 2. Set Name
-		reqErr := setName(sqlDB, uId, reqBody.FirstName, reqBody.LastName)
+		reqErr := setAccountName(sqlDB, uId, reqBody.AccountName)
 		if reqErr != nil {
 			reqErr.LogAndReturn(c)
 			return
@@ -122,7 +122,7 @@ func setNameAndPhotoHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
 
 		// 3. Generate Upload Link
 		key := fmt.Sprintf("user/profile_image/%d", uId)
-		err = cloud.DeleteObject(s3Cli, key)
+		// cloud.DeleteObject(s3Cli, key)
 		uploadUrl, err := cloud.GetImageUploadUrl(s3Cli, key)
 		if err != nil {
 			reqErr := util_errors.GetPresignedUrlFailedErr(err)
@@ -146,7 +146,7 @@ func setProfileImgHandler(sqlDB *sql.DB, s3Cli *s3.Client) gin.HandlerFunc {
 		
 		// 3. Generate Upload Link
 		key := fmt.Sprintf("user/profile_image/%d", uId)
-		cloud.DeleteObject(s3Cli, key)
+		// cloud.DeleteObject(s3Cli, key)
 		uploadUrl, err := cloud.GetImageUploadUrl(s3Cli, key)
 		if err != nil {
 			reqErr := util_errors.GetPresignedUrlFailedErr(err)
@@ -180,6 +180,32 @@ func setNameHandler(sqlDB *sql.DB) gin.HandlerFunc {
 
 		// 2. Set Name
 		reqErr := setName(sqlDB, uId, reqBody.FirstName, reqBody.LastName)
+		if reqErr != nil {
+			reqErr.LogAndReturn(c)
+			return
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
+func setAddressHandler(sqlDB *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		uId, err := middleware.AuthenticateUser(c, sqlDB)
+		if err != nil {
+			return
+		}
+		
+		// 1. Get user email and search if exists in db
+		address := user_models.Address{}
+		
+		if ok := helpers.DecodeReqBody(c, &address); !ok {
+			return
+		}
+
+		// 2. Set Name
+		reqErr := setAddress(sqlDB, uId, address)
 		if reqErr != nil {
 			reqErr.LogAndReturn(c)
 			return
@@ -236,35 +262,6 @@ func setPageThemeHandler(sqlDB *sql.DB) gin.HandlerFunc {
 
 		// 2. Set Name
 		reqErr := setPageTheme(sqlDB, uId, reqBody.PageTheme)
-		if reqErr != nil {
-			reqErr.LogAndReturn(c)
-			return
-		}
-
-		c.JSON(http.StatusOK, nil)
-	}
-}
-
-func initialiseBankingHandler(sqlDB *sql.DB, plaidCli *plaid.APIClient) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		uId, err := middleware.AuthenticateUser(c, sqlDB)
-		if err != nil {
-			return
-		}
-		
-		// 1. Get user email and search if exists in db
-		reqBody := struct {
-			PublicToken  	 string `json:"public_token"`
-		}{}
-		
-		if ok := helpers.DecodeReqBody(c, &reqBody); !ok {
-			return
-		}
-
-		// 2. Set Name
-		reqErr := initialiseBanking(sqlDB, plaidCli, uId, reqBody.PublicToken)
-
 		if reqErr != nil {
 			reqErr.LogAndReturn(c)
 			return
